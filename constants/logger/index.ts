@@ -1,0 +1,3 @@
+export const ENABLE_CONSOLE_LOG = process.env.ENABLE_CONSOLE_LOG
+export const LOGGER_EX_DURATION = process.env.LOGGER_EX_DURATION;
+export const ENABLE_EXTERNAL_LOGGER = process.env.ENABLE_EXTERNAL_LOGGER;
