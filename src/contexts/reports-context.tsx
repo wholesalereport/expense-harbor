@@ -4,15 +4,18 @@ import {NAVIGATION_IDS,REPORT_ID} from "@/constants/reports";
 
 
 
-type NavigationId = keyof typeof NAVIGATION_IDS;
+export type NavigationId = keyof typeof NAVIGATION_IDS;
 
 // Define the context type
 type ReportsLayoutContextType = {
-    navId: NavigationId;
-    setNavId: React.Dispatch<React.SetStateAction<NavigationId>>;
+    navId?: NavigationId | null;
+    setNavId?: React.Dispatch<React.SetStateAction<NavigationId>>;
 };
 
-const ReportsLayoutContext = createContext<ReportsLayoutContextType>(null);
+const ReportsLayoutContext = createContext<ReportsLayoutContextType>({
+    navId: null, // Or provide an initial value
+    setNavId: () => {}
+});
 
 
 export const ReportsLayoutProvider = ({ children }: { children: React.ReactNode }) => {

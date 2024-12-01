@@ -4,7 +4,7 @@ import {vercelKVClient} from "./vercelKV";
 import {LOGGER_EX_DURATION} from "../constants";
 import {ENABLE_CONSOLE_LOG, ENABLE_EXTERNAL_LOGGER} from "@/constants/logger";
 
-export const sanitizeLog = (message) => {
+export const sanitizeLog = (message: string) => {
     const removeAttributes = ["password"];
     removeAttributes.forEach(attr => {
         delete message[attr];
@@ -82,9 +82,21 @@ const getLogger = () => { //fileName = 'application'
 
 };
 
+interface LogMessageOptions {
+    status?: 'info' | 'warn' | 'error'; // Add more status types as needed
+    messageType?: string;
+    message: string;
+    user?: {
+        id?: string;
+        email?: string;
+    };
+    referenceID?: number;
+    request?: any; // Replace 'any' with a more specific type if possible
+    consoleLogOnly?: boolean;
+}
 
 export const createLogMessage = (
-    {status = 'info', messageType = "", message = "", user = {}, referenceID = +new Date, request,consoleLogOnly = false}
+    {status = 'info', messageType = "", message = "", user = {}, referenceID = +new Date, request,consoleLogOnly = false}:LogMessageOptions
 ) => {
     const {id: userId, email} = user || {};
     const logger = getLogger();
