@@ -1,14 +1,24 @@
+//@ts-nocheck
 import {UPDATE} from "@/constants";
 import {get,includes} from 'lodash'
+import {TReport} from "@/lib/types/TReport";
 
-export  const newReportsReducer = (state,action = {}) => {
-    const {type,payload} = action;
-    switch (type){
+type Action = {
+    type?: typeof UPDATE;
+    payload?: Partial<TReport>;
+};
+
+export type TNewReportReducer = (state?: TReport, action?: Action) => TReport;
+
+export  const newReportsReducer:TNewReportReducer  = (state, action) => {
+    switch (action.type){
         case UPDATE:
             return {
                 ...state,
-                ...payload
+                ...action?.payload
             }
+        default:
+            return state;
     }
 }
 

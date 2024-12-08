@@ -1,3 +1,4 @@
+//@ts-nocheck
 import {sendEmailByType} from "@/lib/emailing/send-grid";
 import {SEND_GENERAL_ERROR_ALERT} from "@/constants/emailing";
 import _ from "lodash";

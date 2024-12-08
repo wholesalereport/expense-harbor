@@ -1,4 +1,5 @@
-import { IronSessionOptions } from "iron-session";
+
+import { IronSession } from "iron-session";
 
 export const sessionOptions = {
     password: process.env.SESSION_SECRET, // Use a secure, random string stored in .env.local

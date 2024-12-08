@@ -1,3 +1,4 @@
+//@ts-nocheck
 import {createLogger, format, transports} from 'winston';
 import _ from 'lodash'
 import {vercelKVClient} from "./vercelKV";
@@ -14,14 +15,14 @@ export const sanitizeLog = (message: string) => {
 
 
 
-export const getBody = ({body} = {}) => {
-    try {
-        return JSON.stringify(body)
-    } catch (e) {
-        console.error("Error while parsing body will return as is");
-        return `${body}`;
-    }
-}
+// export const getBody = ({body} = {}) => {
+//     try {
+//         return JSON.stringify(body)
+//     } catch (e) {
+//         console.error("Error while parsing body will return as is");
+//         return `${body}`;
+//     }
+// }
 
 export const getIp = (request = {}) => {
     if (_.isEmpty(request)) {

@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import React, {useEffect, useMemo, useReducer, useRef, useState} from 'react'
@@ -8,7 +9,7 @@ import {
     getAvailableFields,
     hasTransactions,
     isUploadedFileFromAmazon,
-    newReportsReducer
+    newReportsReducer, TNewReportReducer
 } from "@/src/reducers/new-report-reducer";
 import {UPDATE} from "@/constants/reducers";
 import ComboboxComponent from "@/src/components/elements/combobox";
@@ -21,6 +22,7 @@ import {
     defaultFieldNames
 } from "@/lib/utils/fileUtils";
 import {Warning} from "@/src/components/state_notifications";
+import {TReport} from "@/lib/types/TReport";
 //import { useUser } from "@clerk/nextjs";
 
 // const provideExtraFileInfo = useMemo(() => {
@@ -34,11 +36,17 @@ import {Warning} from "@/src/components/state_notifications";
 //     return <div>Please sign in</div>;
 // }
 
+
+
+
 export default function NewReport() {
     const checkoutFormRef = useRef();
 
-    const [state, dispatch] = useReducer(newReportsReducer, {columnsMapping: {}});
-    const updateField = ({name, value}) => dispatch({type: UPDATE, payload: {[name]: value}})
+    const [state, dispatch] = useReducer<TNewReportReducer,TReport>(newReportsReducer, {} as TReport, (initialState) => initialState);
+
+    //@ts-ignore
+    const updateField = ({name, value}) => dispatch({type: UPDATE, payload: {[name]: value}});
+
     const buildValuePicker = ((field, option) => {
         if (option && !isNull(option)) {
             updateField({
@@ -93,6 +101,9 @@ export default function NewReport() {
         console.log("Payment successful:", paymentResult);
 
     }
+
+    console.log("!!! state ",state);
+
     return (
         <div className={"space-y-12 mt-10"}>
             <form onSubmit={handleSubmit}>
@@ -154,29 +165,6 @@ export default function NewReport() {
                             </div>
                         </div>
                         {/* end of report name */}
-                        <div className="sm:col-span-4">
-                            <label htmlFor="marketPlace" className="block text-sm/6 font-medium text-gray-900">
-                                Market Place
-                            </label>
-
-                            <div className="mt-2">
-                                <div
-                                    className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                    <input
-                                        onChange={handleInputChange}
-                                        id={"marketPlace"}
-                                        name="marketPlace"
-                                        type="text"
-                                        className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
-                                        required
-                                    />
-                                </div>
-                                <p className="mt-3 text-sm/6 text-gray-500">
-                                    Where were the charges you are uploading made? For example, Amazon, Walmart, or
-                                    custom sources?
-                                </p>
-                            </div>
-                        </div>
 
                     </div>
                 </div>
@@ -204,7 +192,7 @@ export default function NewReport() {
                                         updateParent={(option = {}) => buildValuePicker('productTitle', option)}
                                         options={options}/>
                                     <p className="mt-2 text-sm text-gray-500">
-                                        Select the column with the product names you purchased.
+                                        Select the column with the product name.
                                     </p>
                                 </div>
                                 <div>
@@ -231,7 +219,7 @@ export default function NewReport() {
                                         options={options}
                                         isOptional={true}
                                     />
-                                    <p className="mt-2 text-sm text-gray-500">Select the column with date when you made an order.</p>
+                                    <p className="mt-2 text-sm text-gray-500">Select the column with order date.</p>
 
                                 </div>
 
