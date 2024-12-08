@@ -4,10 +4,15 @@ import React, {useEffect, useMemo, useReducer, useRef, useState} from 'react'
 import {UploadDropZone} from '@/src/components/UploadDropZone'
 import {PageData} from "@/types";
 import {Checkout} from "@/src/components/checkout-form";
-import {hasTransactions, newReportsReducer} from "@/src/reducers/new-report-reducer";
+import {
+    getAvailableFields,
+    hasTransactions,
+    isUploadedFileFromAmazon,
+    newReportsReducer
+} from "@/src/reducers/new-report-reducer";
 import {UPDATE} from "@/constants/reducers";
 import ComboboxComponent from "@/src/components/elements/combobox";
-import {get, isNull} from 'lodash'
+import {get, isNull,map} from 'lodash'
 import {
     AMAZON_ORDER_DATE_INDEX,
     AMAZON_ORDER_ID_INDEX,
@@ -18,6 +23,16 @@ import {
 import {Warning} from "@/src/components/state_notifications";
 //import { useUser } from "@clerk/nextjs";
 
+// const provideExtraFileInfo = useMemo(() => {
+// }, [uploadWarning])
+//const { isLoaded, isSignedIn, user } = useUser();
+// if (!isLoaded) {
+//     return <div>Loading...</div>;
+// }
+//
+// if (!isSignedIn) {
+//     return <div>Please sign in</div>;
+// }
 
 export default function NewReport() {
     const checkoutFormRef = useRef();
@@ -25,33 +40,40 @@ export default function NewReport() {
     const [state, dispatch] = useReducer(newReportsReducer, {columnsMapping: {}});
     const updateField = ({name, value}) => dispatch({type: UPDATE, payload: {[name]: value}})
     const buildValuePicker = ((field, option) => {
-        console.log("!!! option ", field, option)
         if (option && !isNull(option)) {
-            updateField({name: "columnsMapping", value: {[field]: option?.name}})
+            updateField({
+                name: "columnsMapping",
+                value: {
+                    ...state?.columnsMapping,
+                    [field]: option?.name
+                }
+            })
         }
     })
     const [uploadWarning, setUploadWarning] = useState(false);
     const isHasTransactions = useMemo(() => hasTransactions(state), [state])
-    console.log("!!! state ", state);
-
-    const provideExtraFileInfo = useMemo(() => {
-    }, [uploadWarning])
-    //const { isLoaded, isSignedIn, user } = useUser();
-    // if (!isLoaded) {
-    //     return <div>Loading...</div>;
-    // }
-    //
-    // if (!isSignedIn) {
-    //     return <div>Please sign in</div>;
-    // }
-    const [clientSecret, setClientSecret] = React.useState();
+    const isAmazonFile = useMemo(() => isUploadedFileFromAmazon(state) ,[state])
+    const options = useMemo(() => map(getAvailableFields(state),(v) =>({id: v,name: v})),[state]);
+    const collectExtraFileMeta = useMemo(() => isHasTransactions && !isAmazonFile,[isHasTransactions,isAmazonFile])
 
     const handleInputChange = ({target = {}} = {}) => {
         updateField(target);
     }
     const handleUpload = (data: PageData) => {
+        const fields = get(data, "meta.fields", []);
         updateField({name: 'file', value: data})
-        updateField({name: 'availableFields', value: get(data, "meta.fields", defaultFieldNames)})
+        updateField({name: 'availableFields', value: fields })
+        if(isUploadedFileFromAmazon({"availableFields":get(data,"meta.fields")})){
+           const defaultMapping = {
+               productTitle:  fields[AMAZON_TITLE_INDEX],
+               totalPayed: fields[AMAZON_TOTAL_PAYED_INDEX],
+               orderId: fields[AMAZON_ORDER_ID_INDEX],
+               orderDate: fields[AMAZON_ORDER_DATE_INDEX]
+           };
+            updateField({name: "columnsMapping", value: defaultMapping})
+        }else{
+            updateField({name: "columnsMapping", value: {}})
+        }
     }
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -175,13 +197,12 @@ export default function NewReport() {
                             </div>
                             <UploadDropZone handleOnDrop={handleUpload} onWarning={setUploadWarning}/>
                             {uploadWarning && <div className={"mt-2"}><Warning message={uploadWarning}/></div>}
-                            {isHasTransactions && <div className="mt-2 grid grid-cols-2 gap-6" id="list-of-fields">
+                            {collectExtraFileMeta && <div className="mt-2 grid grid-cols-2 gap-6" id="list-of-fields">
                                 <div>
                                     <ComboboxComponent
                                         label={"Column for Product Name"}
-                                        initSelectedOption={defaultFieldNames[AMAZON_TITLE_INDEX]}
-                                        updateParent={(option = {}) => buildValuePicker('title', option)}
-                                        options={defaultFieldNames}/>
+                                        updateParent={(option = {}) => buildValuePicker('productTitle', option)}
+                                        options={options}/>
                                     <p className="mt-2 text-sm text-gray-500">
                                         Select the column with the product names you purchased.
                                     </p>
@@ -189,18 +210,16 @@ export default function NewReport() {
                                 <div>
                                     <ComboboxComponent
                                         label={"Column for Total Payed"}
-                                        initSelectedOption={defaultFieldNames[AMAZON_TOTAL_PAYED_INDEX]}
-                                        updateParent={(option = {}) => buildValuePicker('title', option)}
-                                        options={defaultFieldNames}/>
+                                        updateParent={(option = {}) => buildValuePicker('totalPayed', option)}
+                                        options={options}/>
                                     <p className="mt-2 text-sm text-gray-500">Select the column with the amount you
                                         paid.</p>
                                 </div>
                                 <div>
                                     <ComboboxComponent
                                         label={"Column for Order ID"}
-                                        initSelectedOption={defaultFieldNames[AMAZON_ORDER_ID_INDEX]}
-                                        updateParent={(option = {}) => buildValuePicker('title', option)}
-                                        options={defaultFieldNames}
+                                        updateParent={(option = {}) => buildValuePicker('orderId', option)}
+                                        options={options}
                                         isOptional={true}
                                     />
                                     <p className="mt-2 text-sm text-gray-500">Select the column with order id.</p>
@@ -208,9 +227,8 @@ export default function NewReport() {
                                 <div>
                                     <ComboboxComponent
                                         label={"Column for Order Date"}
-                                        initSelectedOption={defaultFieldNames[AMAZON_ORDER_DATE_INDEX]}
-                                        updateParent={(option = {}) => buildValuePicker('title', option)}
-                                        options={defaultFieldNames}
+                                        updateParent={(option = {}) => buildValuePicker('orderDate', option)}
+                                        options={options}
                                         isOptional={true}
                                     />
                                     <p className="mt-2 text-sm text-gray-500">Select the column with date when you made an order.</p>
