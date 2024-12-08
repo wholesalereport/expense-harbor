@@ -108,7 +108,7 @@ export const createLogMessage = (
         logger[status](`[${new Date().toLocaleString('en-US')}][${referenceID}][ip:${ip || 'unknown'}][browser:"${browserInfo}"][user - ${userId || email}][${messageType}] ${message}`)
     }
 
-    if (ENABLE_EXTERNAL_LOGGER) {
+    if (ENABLE_EXTERNAL_LOGGER === 'YES') {
         const key = `expense-harbor-log-${new Date().toLocaleString()}`
         let msg;
         try{

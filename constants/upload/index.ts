@@ -1,0 +1,1 @@
+export const MAX_UPLOAD_FILE_SIZE =   process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE;
