@@ -6,14 +6,14 @@ import {CheckCircleIcon} from '@heroicons/react/20/solid'
 import { isFunction} from 'lodash';
 import {TPackage} from "@/src/components/checkout-form/TPackage";
 import {TReportState} from "@/lib/types/TReport";
-import {packages} from '@/constants'
+import {payment_tears_settings} from '@/constants'
 
 
-export function Packages({totalItems = 0,onPackageChange = (props: TReportState) => props}) {
-    const [selectedPackage, setSelectedPackage] = useState<TPackage>(packages[0])
+export function PaymentTears({totalItems = 0,onPackageChange = (props: TReportState) => props}) {
+    const [selectedPaymentTear, setSelectedPaymentTear] = useState<TPackage>(payment_tears_settings[0])
 
     const handleSelectionChange = (p: TPackage) => {
-        setSelectedPackage(p);
+        setSelectedPaymentTear(p);
         isFunction(onPackageChange) && onPackageChange({name:'tier',value: p})
     }
     return (
@@ -24,11 +24,11 @@ export function Packages({totalItems = 0,onPackageChange = (props: TReportState)
             </p>
             <RadioGroup
                 name={"tier"}
-                value={selectedPackage}
+                value={selectedPaymentTear}
                 onChange={handleSelectionChange}
                 className="mt-6 grid grid-cols-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 w-full"
             >
-                {packages.map((p: TPackage) => (
+                {payment_tears_settings.map((p: TPackage) => (
                     <Radio
                         disabled={p?.disabled(totalItems)}
                         key={p.id}

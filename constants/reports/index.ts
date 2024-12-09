@@ -38,7 +38,7 @@ export const TIERS = {
 
 const calcEnabledFlag = (totalItems: number, from: number) => totalItems >= from;
 
-export const packages = [
+export const payment_tears_settings = [
     {
         id: TIER_ONE_ID,
         title: `0 - ${TIER_ONE_UPPER_LIMIT} Transactions`,

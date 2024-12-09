@@ -23,8 +23,8 @@ import {
 import {Warning} from "@/src/components/state_notifications";
 import {TReport, TReportState} from "@/lib/types/TReport";
 import { useUser } from "@clerk/nextjs";
-import {packages, SUCCESS_STATUS, TIER_ONE_ID} from "@/constants";
-import {Packages} from "@/src/components/checkout-form/packages";
+import {payment_tears_settings, SUCCESS_STATUS, TIER_ONE_ID} from "@/constants";
+import {PaymentTears} from "@/src/components/checkout-form/payment_tears";
 
 // const provideExtraFileInfo = useMemo(() => {
 // }, [uploadWarning])
@@ -91,7 +91,7 @@ export default function NewReport() {
         const totalTransactions = get(data,"data",[]).length;
 
         if(totalTransactions > 0){
-            updateField({name: 'tier',value: first(packages) })
+            updateField({name: 'tier',value: first(payment_tears_settings) })
         }
     }
 
@@ -246,7 +246,7 @@ export default function NewReport() {
                         <div className="sm:col-span-4">
                             <div className="mt-2">
                                 {/* Payment Opitons */}
-                                {totalSize && <Packages totalItems={totalSize} onPackageChange={updateField} />}
+                                {totalSize && <PaymentTears totalItems={totalSize} onPackageChange={updateField} />}
                             </div>
                             {  selectedTier?.upperLimit > 0 && totalSize > selectedTier?.upperLimit &&
                                 <div className="mt-2">
