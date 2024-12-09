@@ -7,60 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  reports   Report[] // A user can own multiple reports
-  charges   Charge[] // A user can have multiple charges
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Report {
-  id          Int             @id @default(autoincrement())
-  name        String          @default(uuid()) // Unique identifier as the default value
-  userId      Int
-  marketplace MarketplaceType // Enum for marketplace type (Amazon, Walmart, Custom)
-  orders      Order[] // A report contains multiple orders
-  charges     Charge[] // A report can have multiple charges
-  user        User            @relation(fields: [userId], references: [id])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-}
-
-model Order {
-  id        Int       @id @default(autoincrement())
-  reportId  Int
-  products  Product[] // Each order can have multiple products
-  total     Float // Total amount for the order
-  report    Report    @relation(fields: [reportId], references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Product {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  asin      String // Product identifier, unique per marketplace
-  name      String // Product name
-  price     Float // Price of the product
-  quantity  Int // Quantity of the product in the order
-  order     Order    @relation(fields: [orderId], references: [id])
+  reportId  String   @default(uuid()) // Unique identifier as the default value
+  userId    String?
+  email     String
+  fullName  String
+  charges   Charge[] // A report can have multiple charges some of them could be failed once
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Charge {
-  id            Int          @id @default(autoincrement())
-  status        ChargeStatus // Enum to track whether charge is pending or complete
+  report        Report?      @relation(fields: [reportId], references: [id]) // Optional relation to Report
+  status        ChargeStatus @default(PENDING) // Enum to track whether charge is pending or complete
   chargeType    ChargeType // Enum for charge type (REPORT_CHARGE, RECURRING_CHARGE)
   customerId    String // Stripe Customer ID
-  userId        Int
-  reportId      Int? // Optional reference to a specific report
-  transactionId String? // Transaction ID from Stripe or payment processor
-  user          User         @relation(fields: [userId], references: [id])
-  report        Report?      @relation(fields: [reportId], references: [id]) // Optional relation to Report
+  userId        String?
+  reportId      String // Optional reference to a specific report
+  transactionId String       @id // Transaction ID from Stripe or payment processor
   createdAt     DateTime     @default(now())
 }
 

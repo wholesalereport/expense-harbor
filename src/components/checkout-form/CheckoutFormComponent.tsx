@@ -26,10 +26,8 @@ const CheckoutForm = forwardRef((props, ref) => {
 
             if (error) {
                 setError(error.message);
-                return null;
             }
-
-            return paymentIntent;
+            return {error,paymentIntent};
         },
     }));
 

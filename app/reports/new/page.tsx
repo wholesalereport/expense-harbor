@@ -6,24 +6,25 @@ import {UploadDropZone} from '@/src/components/UploadDropZone'
 import {PageData} from "@/types";
 import {Checkout} from "@/src/components/checkout-form";
 import {
-    getAvailableFields,
+    getAvailableFields, getFileSize, getSelectedTier,
     hasTransactions,
     isUploadedFileFromAmazon,
     newReportsReducer, TNewReportReducer
 } from "@/src/reducers/new-report-reducer";
 import {UPDATE} from "@/constants/reducers";
 import ComboboxComponent from "@/src/components/elements/combobox";
-import {get, isNull,map} from 'lodash'
+import {first, get, isNull, map} from 'lodash'
 import {
     AMAZON_ORDER_DATE_INDEX,
     AMAZON_ORDER_ID_INDEX,
     AMAZON_TITLE_INDEX,
     AMAZON_TOTAL_PAYED_INDEX,
-    defaultFieldNames
 } from "@/lib/utils/fileUtils";
 import {Warning} from "@/src/components/state_notifications";
-import {TReport} from "@/lib/types/TReport";
-//import { useUser } from "@clerk/nextjs";
+import {TReport, TReportState} from "@/lib/types/TReport";
+import { useUser } from "@clerk/nextjs";
+import {packages, SUCCESS_STATUS, TIER_ONE_ID} from "@/constants";
+import {Packages} from "@/src/components/checkout-form/packages";
 
 // const provideExtraFileInfo = useMemo(() => {
 // }, [uploadWarning])
@@ -38,14 +39,14 @@ import {TReport} from "@/lib/types/TReport";
 
 
 
-
 export default function NewReport() {
+    const { isLoaded, isSignedIn, user } = useUser();
     const checkoutFormRef = useRef();
 
     const [state, dispatch] = useReducer<TNewReportReducer,TReport>(newReportsReducer, {} as TReport, (initialState) => initialState);
 
     //@ts-ignore
-    const updateField = ({name, value}) => dispatch({type: UPDATE, payload: {[name]: value}});
+    const updateField = ({name, value}: TReportState) => dispatch({type: UPDATE, payload: {[name]: value}});
 
     const buildValuePicker = ((field, option) => {
         if (option && !isNull(option)) {
@@ -59,15 +60,20 @@ export default function NewReport() {
         }
     })
     const [uploadWarning, setUploadWarning] = useState(false);
-    const isHasTransactions = useMemo(() => hasTransactions(state), [state])
-    const isAmazonFile = useMemo(() => isUploadedFileFromAmazon(state) ,[state])
-    const options = useMemo(() => map(getAvailableFields(state),(v) =>({id: v,name: v})),[state]);
-    const collectExtraFileMeta = useMemo(() => isHasTransactions && !isAmazonFile,[isHasTransactions,isAmazonFile])
+    const isHasTransactions = hasTransactions(state);
+    const isAmazonFile = isUploadedFileFromAmazon(state);
+    const options = map(getAvailableFields(state),(v) =>({id: v,name: v}));
+    const collectExtraFileMeta =  isHasTransactions && !isAmazonFile;
+    const totalSize =  getFileSize(state);
+    const selectedTier = getSelectedTier(state);
+
 
     const handleInputChange = ({target = {}} = {}) => {
         updateField(target);
     }
     const handleUpload = (data: PageData) => {
+        console.log("!!! data from file ",data);
+
         const fields = get(data, "meta.fields", []);
         updateField({name: 'file', value: data})
         updateField({name: 'availableFields', value: fields })
@@ -82,28 +88,34 @@ export default function NewReport() {
         }else{
             updateField({name: "columnsMapping", value: {}})
         }
+        const totalTransactions = get(data,"data",[]).length;
+
+        if(totalTransactions > 0){
+            updateField({name: 'tier',value: first(packages) })
+        }
     }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const response = await fetch("/api/payments/payment-intent", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({amount: 5000}), // Amount in cents
+            body: JSON.stringify({amount: 5000}), // Amount in centsF
         });
         const {clientSecret} = await response.json();
         console.log("!!! got client secret ", clientSecret);
 
-        const paymentResult = await checkoutFormRef.current.handlePayment(clientSecret);
-        if (!paymentResult) {
-            console.error("Payment failed.");
+        const {error,paymentIntent} = await checkoutFormRef.current.handlePayment(clientSecret);
+        if (!get(paymentIntent,"status") === SUCCESS_STATUS) {
+            /*TODO: need to send this to the server */
+            console.error("Payment failed.",error,get(paymentIntent,"status"));
             return;
         }
-        console.log("Payment successful:", paymentResult);
+        console.log("Payment successful:", paymentIntent);
 
     }
 
-    console.log("!!! state ",state);
-
+    console.log("!!! state ",state)
     return (
         <div className={"space-y-12 mt-10"}>
             <form onSubmit={handleSubmit}>
@@ -116,6 +128,7 @@ export default function NewReport() {
                         </p>
                     </div>
                     <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
+                        {/* end of report name */}
                         <div className="sm:col-span-4">
                             <div className="flex justify-between">
                                 <label htmlFor="ownerName" className="block text-sm/6 font-medium text-gray-900">
@@ -133,39 +146,36 @@ export default function NewReport() {
                                         placeholder="John Doe"
                                         className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
                                         required
+                                        defaultValue={get(user, "fullName")}
                                     />
                                 </div>
                             </div>
                         </div>
                         {/* end of owner name */}
+                        {/* your email */}
                         <div className="sm:col-span-4">
                             <div className="flex justify-between">
-                                <label htmlFor="reportName" className="block text-sm/6 font-medium text-gray-900">
-                                    Report Name
+                                <label htmlFor="ownerEmail" className="block text-sm/6 font-medium text-gray-900">
+                                    Your Email
                                 </label>
-                                <span id="email-optional" className="text-sm/5 text-gray-500">
-                                    Optional
-                                </span>
                             </div>
                             <div className="mt-2">
                                 <div
                                     className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                                     <input
                                         onChange={handleInputChange}
-                                        id={"reportName"}
-                                        name="reportName"
+                                        id={"ownerEmail"}
+                                        name="email"
                                         type="text"
+                                        placeholder="you@example.com"
                                         className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
                                         required
+                                        defaultValue={get(user, "primaryEmailAddress.emailAddress")}
                                     />
                                 </div>
-                                <p className="mt-3 text-sm/6 text-gray-500">Don't have one? No problem, we will create
-                                    it for you!</p>
-
                             </div>
                         </div>
-                        {/* end of report name */}
-
+                        {/* end of your email */}
                     </div>
                 </div>
                 {/* Begining of the your file section */}
@@ -220,10 +230,34 @@ export default function NewReport() {
                                         isOptional={true}
                                     />
                                     <p className="mt-2 text-sm text-gray-500">Select the column with order date.</p>
-
                                 </div>
-
                             </div>}
+                        </div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
+                    <div>
+                        <h2 className="text-base/7 font-semibold text-gray-900">Totals</h2>
+                        <p className="mt-1 text-sm/6 text-gray-600">
+                          Please choose the package you'd like to pay for.
+                        </p>
+                    </div>
+                    <div className="grid max-w-3xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
+                        <div className="sm:col-span-4">
+                            <div className="mt-2">
+                                {/* Payment Opitons */}
+                                {totalSize && <Packages totalItems={totalSize} onPackageChange={updateField} />}
+                            </div>
+                            {  selectedTier?.upperLimit > 0 && totalSize > selectedTier?.upperLimit &&
+                                <div className="mt-2">
+                                <Warning title={"Update your current tier"} >
+                                    You current tier can be used to process upto <span className="font-bold">{selectedTier?.upperLimit}</span> but you have <span className="font-bold">{totalSize}</span> transactions.
+                                    Please try to select different tier or remove some transactions.
+
+                                </Warning>
+                                </div>
+                                }
+
                         </div>
                     </div>
                 </div>

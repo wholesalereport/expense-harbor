@@ -29,3 +29,4 @@ export const isUploadedFileFromAmazon = state => {
     return includes(get(state,"availableFields",[]),...["ASIN","Order ID","Order Date","Total Owed","Product Name"])
 }
 export const getAvailableFields = state => get(state,"availableFields",[]);
+export const getSelectedTier = state => get(state,"tier");

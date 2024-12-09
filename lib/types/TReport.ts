@@ -33,3 +33,5 @@ export type TReport = {
     availableFields?: string[];
     columnsMapping?: ColumnsMapping;
 };
+
+export type TReportState = {name: string,value: unknown} | Record<string,unknown>;
