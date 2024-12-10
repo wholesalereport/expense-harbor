@@ -48,6 +48,18 @@ export default function NewReport() {
     //@ts-ignore
     const updateField = ({name, value}: TReportState) => dispatch({type: UPDATE, payload: {[name]: value}});
 
+    const updateFields = (data = []) => {
+        dispatch({
+                type: UPDATE,payload: data.reduce((acc,obj) => {
+                    return {
+                        ...acc,
+                        ...obj
+                    }
+
+                },{})
+        })
+    }
+
     const buildValuePicker = ((field, option) => {
         if (option && !isNull(option)) {
             updateField({
@@ -67,12 +79,18 @@ export default function NewReport() {
     const totalSize =  getFileSize(state);
     const selectedTier = getSelectedTier(state);
 
+    useEffect(() => {
+        if(isSignedIn && user){
+            updateFields([
+                {name: get(user,"fullName"),email: get(user, "primaryEmailAddress.emailAddress")}
+            ])
+        }
+    },[isSignedIn,user])
 
     const handleInputChange = ({target = {}} = {}) => {
         updateField(target);
     }
     const handleUpload = (data: PageData) => {
-        console.log("!!! data from file ",data);
 
         const fields = get(data, "meta.fields", []);
         updateField({name: 'file', value: data})
@@ -146,7 +164,7 @@ export default function NewReport() {
                                         placeholder="John Doe"
                                         className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
                                         required
-                                        defaultValue={get(user, "fullName")}
+                                        defaultValue={state?.name}
                                     />
                                 </div>
                             </div>
@@ -170,7 +188,7 @@ export default function NewReport() {
                                         placeholder="you@example.com"
                                         className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
                                         required
-                                        defaultValue={get(user, "primaryEmailAddress.emailAddress")}
+                                        defaultValue={state?.email}
                                     />
                                 </div>
                             </div>
@@ -252,8 +270,7 @@ export default function NewReport() {
                                 <div className="mt-2">
                                 <Warning title={"Update your current tier"} >
                                     You current tier can be used to process upto <span className="font-bold">{selectedTier?.upperLimit}</span> but you have <span className="font-bold">{totalSize}</span> transactions.
-                                    Please try to select different tier or remove some transactions.
-
+                                    Please select different tier or remove some transactions.
                                 </Warning>
                                 </div>
                                 }
