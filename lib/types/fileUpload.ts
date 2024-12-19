@@ -1,4 +1,4 @@
-import {TOrder} from "@/types/order";
+import {TOrder} from "@/lib/types/order";
 
 export interface Meta {
     delimiter: string;

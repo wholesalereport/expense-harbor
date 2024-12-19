@@ -94,10 +94,11 @@ interface LogMessageOptions {
     referenceID?: number;
     request?: any; // Replace 'any' with a more specific type if possible
     consoleLogOnly?: boolean;
+    data?: unknown;
 }
 
 export const createLogMessage = (
-    {status = 'info', messageType = "", message = "", user = {}, referenceID = +new Date, request,consoleLogOnly = false}:LogMessageOptions
+    {status = 'info', messageType = "", message = "", user = {}, referenceID = +new Date, request,consoleLogOnly = false,data = null}:LogMessageOptions
 ) => {
     const {id: userId, email} = user || {};
     const logger = getLogger();
@@ -106,7 +107,7 @@ export const createLogMessage = (
     const url = _.get(request, 'url');
 
     if(ENABLE_CONSOLE_LOG){
-        logger[status](`[${new Date().toLocaleString('en-US')}][${referenceID}][ip:${ip || 'unknown'}][browser:"${browserInfo}"][user - ${userId || email}][${messageType}] ${message}`)
+        logger[status](`[${new Date().toLocaleString('en-US')}][${referenceID}][ip:${ip || 'unknown'}][browser:"${browserInfo}"][user - ${userId || email}][${messageType}] ${message} , [data]:${JSON.stringify(data)}`)
     }
 
     if (ENABLE_EXTERNAL_LOGGER === 'YES') {
@@ -125,7 +126,8 @@ export const createLogMessage = (
                     browserInfo,
                     ip: ip || 'unknown',
                     user: userId || email,
-                    createdOn: +new Date
+                    createdOn: +new Date,
+                    data: JSON.stringify(data)
                 }
             }
         },{ex: LOGGER_EX_DURATION || 60 * 60 * 24 * 5});

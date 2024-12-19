@@ -3,43 +3,61 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Use your preferred database provider
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id // Primary key
+  firstName String? // Optional first name
+  lastName  String? // Optional last name
+  email     String?  @unique // Optional and unique email for the user
+  reports   Report[] // One-to-many relationship with Report
+
+  createdAt DateTime @default(now()) // Automatically set when created
+  updatedAt DateTime @updatedAt // Automatically updated when modified
+}
+
 model Report {
-  reportId  String   @default(uuid()) // Unique identifier as the default value
-  userId    String?
-  email     String
-  fullName  String
-  charges   Charge[] // A report can have multiple charges some of them could be failed once
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String          @id @default(uuid()) // UUID as primary key
+  userId     String // Foreign key referencing User
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tierId     String // Tier ID attribute for the report
+  totalLines Int // Total lines attribute
+  status     ReportStatus    @default(pending) // Status of the report
+  payments   PaymentIntent[] // One-to-many relationship with payment intents
+  createdAt  DateTime        @default(now()) // Automatically set when created
+  updatedAt  DateTime        @updatedAt // Automatically updated when modified
+  deletedAt  DateTime? // Soft delete field
 }
 
-model Charge {
-  report        Report?      @relation(fields: [reportId], references: [id]) // Optional relation to Report
-  status        ChargeStatus @default(PENDING) // Enum to track whether charge is pending or complete
-  chargeType    ChargeType // Enum for charge type (REPORT_CHARGE, RECURRING_CHARGE)
-  customerId    String // Stripe Customer ID
-  userId        String?
-  reportId      String // Optional reference to a specific report
-  transactionId String       @id // Transaction ID from Stripe or payment processor
-  createdAt     DateTime     @default(now())
+model PaymentIntent {
+  id              String              @id // PaymentIntent ID from the object
+  amount          Int // Amount in smallest currency unit (e.g., cents)
+  currency        String // Currency code (e.g., "usd")
+  paymentMethodId String? // Optional payment method ID
+  status          PaymentIntentStatus @default(requires_payment_method) // Enum for payment status
+  reportId        String? // Foreign key referencing Report
+  report          Report?             @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) // Automatically set when created
+  updatedAt DateTime @updatedAt // Automatically updated when modified
 }
 
-enum MarketplaceType {
-  Amazon
-  Walmart
-  Custom
+enum ReportStatus {
+  pending
+  in_progress
+  complete
+  deleted
+  open
 }
 
-enum ChargeStatus {
-  PENDING
-  COMPLETE
-}
-
-enum ChargeType {
-  REPORT_CHARGE
-  RECURRING_CHARGE
+enum PaymentIntentStatus {
+  requires_payment_method
+  requires_confirmation
+  requires_action
+  processing
+  requires_capture
+  canceled
+  succeeded
 }

@@ -28,11 +28,9 @@ export function withErrorHandling(
                 emailType: SEND_GENERAL_ERROR_ALERT,
                 text: JSON.stringify(errorDetails,null,2)
             });
-            return new Response(
-               JSON.stringify(
-                    { error: 'An unexpected error occurred. Request was logged and our team is looking in to it'}),
-                { status: 500 }
-                );
+            return  Response.json(
+                { status: 500, error: JSON.stringify({ error}) }
+            );
         }
     };
 }

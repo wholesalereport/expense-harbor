@@ -30,3 +30,7 @@ brew services restart postgresql
 
 # ChatGPT Api
 https://platform.openai.com/docs/overview
+
+# Error handling
+
+ReactDevOverlay

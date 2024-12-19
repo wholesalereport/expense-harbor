@@ -1,3 +1,8 @@
+import {TTier} from "@/lib/types/TTier";
+import {REPORT_STATUSES} from "@/constants";
+import {User} from "@clerk/clerk-sdk-node";
+import {TUserInput} from "@/lib/types/TUser";
+
 type MetaData = {
     delimiter: string;
     linebreak: string;
@@ -26,12 +31,19 @@ type ColumnsMapping = {
     orderDate: string;
 };
 
+export type ReportStatus = (typeof REPORT_STATUSES)[keyof typeof REPORT_STATUSES];
+
+
 export type TReport = {
-    name?: string;
-    reportName?: string;
-    file?: File;
-    availableFields?: string[];
-    columnsMapping?: ColumnsMapping;
+    id?: string; // Auto-incrementing primary key
+    user?: TUserInput; // Foreign key referencing User
+    status: ReportStatus; // ReportStatus enum
+    tier?:TTier;
+    tierId: string;
+    totalLines: number;
+    createdAt: Date; // Creation timestamp
+    updatedAt: Date; // Last update timestamp
+    deletedAt: Date | null; // Optional soft-delete timestamp
 };
 
 export type TReportState = {name: string,value: unknown} | Record<string,unknown>;

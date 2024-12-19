@@ -27,7 +27,7 @@ function Hero() {
                         Categorize your order items, generate detailed reports, and maximize your tax return.
                     </p>
                     <div className="mt-12 flex flex-col gap-x-6 gap-y-4 sm:flex-row">
-                        <Button href="#">Get started</Button>
+                        <Button href="/reports/new">Get started</Button>
                         <Button variant="secondary" href="/pricing">
                             See pricing
                         </Button>
@@ -46,7 +46,7 @@ function Hero2() {
             <div className="relative isolate px-6 pt-14 lg:px-8">
                 <div
                     aria-hidden="true"
-                    className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+                    className="inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
                 >
                     <div
                         style={{
@@ -72,7 +72,7 @@ function Hero2() {
                             {/*>*/}
                             {/*    Get started*/}
                             {/*</a>*/}
-                            <Button href="#">Get started</Button>
+                            <Button href="/reports/new">Get started</Button>
                             <a href="#" className="text-sm/6 font-semibold text-gray-900">
                                 Learn more <span aria-hidden="true">→</span>
                             </a>
@@ -100,7 +100,7 @@ function Hero2() {
 export default function Home() {
     return (
         <div className="overflow-hidden">
-            <Hero2/>
+            <Hero2 />
         </div>
     )
 }
