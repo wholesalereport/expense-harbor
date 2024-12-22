@@ -29,6 +29,15 @@ const CheckoutForm = forwardRef((props, ref) => {
             }
             return {error,paymentIntent};
         },
+        validateForm() {
+            const cardElement = elements?.getElement(CardElement);
+            if (!cardElement || !cardElement._complete) {
+                setError("Please complete the payment form.");
+                return false;
+            }
+            setError("");
+            return true;
+        },
     }));
 
 
@@ -51,41 +60,9 @@ const CheckoutForm = forwardRef((props, ref) => {
                     },
                 }}
             />
-            <button type="submit" disabled={!stripe || loading}>
-                {loading ? "Processing..." : "Pay"}
-            </button>
             {error && <div style={{ color: "red" }}>{error}</div>}
         </>
     );
 });
 
 export default CheckoutForm;
-
-// const handleSubmit = async (event) => {
-//     event.preventDefault();
-//     setLoading(true);
-//
-//     const response = await fetch("/api/payments/payment-intent", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ amount: 5000 }), // Amount in cents
-//     });
-//
-//     const { clientSecret } = await response.json();
-//
-//     const cardElement = elements.getElement(CardElement);
-//     const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-//         payment_method: {
-//             card: cardElement,
-//         },
-//     });
-//
-//     if (error) {
-//         setError(error.message);
-//     } else {
-//         console.log("PaymentIntent:", paymentIntent);
-//         alert("Payment successful!");
-//     }
-//
-//     setLoading(false);
-// };

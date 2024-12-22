@@ -1,7 +1,7 @@
 //@ts-nocheck
 "use client";
 
-import React, {useEffect, useMemo, useReducer, useRef, useState} from 'react'
+import React, { useReducer, useRef, useState} from 'react'
 import {UploadDropZone} from '@/src/components/UploadDropZone'
 import {PageData} from "@/types";
 import {Checkout} from "@/src/components/checkout-form";
@@ -33,6 +33,7 @@ import { useRouter } from "next/router";
 
 
 export default function NewReport() {
+    const [isLoading,setIsLoading] = useState<boolean>(false)
     const {isLoaded, isSignedIn, user} = useUser();
     const {  userId } = useAuth();
 
@@ -107,14 +108,18 @@ export default function NewReport() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const response = await fetch("/api/payments/payment-intent", {
+        setIsLoading(true)
+
+        if (!checkoutFormRef.current.validateForm()) {
+            setIsLoading(false)
+            return;
+        }
+        const response = await fetch("/api/payments/intent", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(omit(state, ["availableFields"])) // Amount in centsF
         });
         const {clientSecret} = await response.json();
-
-
         const {error, paymentIntent} = await checkoutFormRef.current.handlePayment(clientSecret);
 
         if (!get(paymentIntent, "status") === SUCCESS_STATUS) {
@@ -123,13 +128,14 @@ export default function NewReport() {
             return;
         }
 
-        console.log("Payment successful:", paymentIntent);
-
+        await fetch(`/api/payments/${paymentIntent.id}/confirm`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},// Amount in centsF
+            body: JSON.stringify({final: true})
+        });
+        setIsLoading(false)
     }
 
-
-    console.log("!!! state ", state)
-    console.log("selectedTier", selectedTier, totalSize, selectedTier?.upperLimit > 0 && totalSize > selectedTier?.upperLimit)
     return (
         <div className={"space-y-12 mt-10"}>
             <form onSubmit={handleSubmit}>
@@ -224,6 +230,13 @@ export default function NewReport() {
                         </div>
                     </div>
                 </div>
+
+                <div className="mt-6 flex items-center justify-end gap-x-6">
+                    <button type="button" className="text-sm/6 font-semibold text-gray-900">
+                        Cancel
+                    </button>
+                    <SubmitButton type={"submit"} isLoading={isLoading}/>
+                </div>
             </form>
         </div>
 
@@ -233,6 +246,9 @@ export default function NewReport() {
 
 import {getEmail, getFullName} from "@/src/adapters";
 import {clerkClient} from "@clerk/nextjs";
+import {format} from "logform";
+import cli = format.cli;
+import SubmitButton from "@/src/components/loading-button";
 
 // const provideExtraFileInfo = useMemo(() => {
 // }, [uploadWarning])

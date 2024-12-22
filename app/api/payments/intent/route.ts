@@ -5,53 +5,69 @@ import {get, isNull, size} from 'lodash';
 import {createReport} from "@/lib/db";
 import {TReport} from "@/lib/types/TReport";
 import {extractError} from "@/lib/request/helpers";
-import {payment_tears_settings, SEND_CREATE_PAYMENT_INTENT} from "@/constants";
+import {
+    COMPLETING_PAYMENT_REPORT,
+    CREATED_REPORT,
+    payment_tears_settings,
+    SEND_CREATE_PAYMENT_INTENT
+} from "@/constants";
 import {TTier} from "@/lib/types/TTier";
 import {createPaymentIntent} from "@/lib/db/payment_intent";
 import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
-import { auth, currentUser } from '@clerk/nextjs/server'
+import {auth, currentUser} from '@clerk/nextjs/server'
 import {upsertUser} from "@/lib/db/user";
-import { User } from "@clerk/clerk-sdk-node";
+import {User} from "@clerk/clerk-sdk-node";
 import {TUserInput} from "@/lib/types/TUser";
 
 
 const stripe = require('stripe')(STP_SECRET_KEY);
 
+//const handler
 const handler = async (request: Request) => {
-    const { userId } = await auth()
+    const {userId} = await auth()
     const user = await currentUser() as TUserInput;
 
     if (!userId) {
-        return new Response('Unauthorized', { status: 401 })
+        return new Response('Unauthorized', {status: 401})
     }
-
     /*TODO: need to check for error on user create */
-    if(!isNull(user))  upsertUser(user);
+    if (!isNull(user)) upsertUser(user);
 
     const body = await request.json();
-    const tier = get(body,'tier',{});
-    const selectedTier:TTier | undefined  = payment_tears_settings.find(({id}) => tier.id === id );
+    const tier = get(body, 'tier', {});
+    const selectedTier: TTier | undefined = payment_tears_settings.find(({id}) => tier.id === id);
+    const totalLines = size(get(body, "file.data"))
 
     let report: TReport;
+    let paymentIntent;
 
     const amount = selectedTier?.amount;
 
-    if(!amount || amount <= 0){
+    if (!amount || amount <= 0) {
         throw `Received a wrong tier and can not get correct amount: ${JSON.stringify(tier)}`
     }
 
-    try {
-        report = await createReport({
-            ...body,
-            user,
-            totalLines: size(get(body, "file.data")),
-        });
 
-    } catch (error: TError | unknown) {
-        throw extractError(error);
-    }
+    report = await createReport({
+        ...body,
+        user,
+        totalLines
+    });
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const reportId = get(report,"id");
+
+    createLogMessage({
+        message: 'E/H - created report',
+        messageType: CREATED_REPORT,
+        data: {
+            userId,
+            report,
+            totalLines
+        },
+        request
+    })
+
+    paymentIntent = await stripe.paymentIntents.create({
         //TODO: replace with items calculator
         amount,
         currency: 'usd',
@@ -59,23 +75,33 @@ const handler = async (request: Request) => {
             enabled: true,
         },
         metadata: {
-            recordId: get(report, "id") // Attach your recordId here
-        }
+            reportId// Attach your recordId here
+        },
     });
+
+
+    createLogMessage({
+        message: 'E/H - created payment intent',
+        messageType: CREATED_REPORT,
+        data: {
+            userId,
+            reportId,
+            totalLines
+        },
+        request
+    })
+
     let dbPaymentIntent: TPaymentIntent;
 
-    try{
-       dbPaymentIntent =  await createPaymentIntent(report,paymentIntent);
-    }catch(e){
-        throw `Payment was not created because of this error: ${JSON.stringify(e)}`
-    }
+    dbPaymentIntent = await createPaymentIntent(report, paymentIntent, userId);
 
     createLogMessage({
         message: 'E/H - created payment intent',
         messageType: SEND_CREATE_PAYMENT_INTENT,
-        data:dbPaymentIntent,
+        data: dbPaymentIntent,
         request
     })
+
     return Response.json({
         status: 'ok',
         clientSecret: paymentIntent.client_secret,
@@ -83,4 +109,4 @@ const handler = async (request: Request) => {
     })
 }
 
-export const POST = withErrorHandling(handler)
+export const POST = withErrorHandling(handler);

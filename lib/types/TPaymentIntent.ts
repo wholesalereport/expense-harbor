@@ -11,7 +11,8 @@ export type TPaymentIntent = {
         | "canceled"
         | "succeeded"; // PaymentIntentStatus enum
     reportId?: string | null; // Foreign key referencing Report
+    userId: string;
     createdAt: Date; // Creation timestamp
     updatedAt: Date; // Last update timestamp,
-    paymentMethodId?:string | undefined | null;
+    paymentMethodId?:string  | null;
 };

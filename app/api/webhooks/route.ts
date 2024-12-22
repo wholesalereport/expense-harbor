@@ -31,7 +31,7 @@ const handler = async (request: Request) => {
         throw new Error('STP_SECRET_KEY is not set in the environment variables.');
     }
     const stripe = new Stripe(STP_SECRET_KEY, {
-        apiVersion: '2024-11-20.acacia',
+        apiVersion: '2024-12-18.acacia',
     });
 
     const body = await request.text();

@@ -14,8 +14,9 @@ model User {
   email     String?  @unique // Optional and unique email for the user
   reports   Report[] // One-to-many relationship with Report
 
-  createdAt DateTime @default(now()) // Automatically set when created
-  updatedAt DateTime @updatedAt // Automatically updated when modified
+  createdAt     DateTime        @default(now()) // Automatically set when created
+  updatedAt     DateTime        @updatedAt // Automatically updated when modified
+  PaymentIntent PaymentIntent[]
 }
 
 model Report {
@@ -32,16 +33,18 @@ model Report {
 }
 
 model PaymentIntent {
-  id              String              @id // PaymentIntent ID from the object
-  amount          Int // Amount in smallest currency unit (e.g., cents)
-  currency        String // Currency code (e.g., "usd")
-  paymentMethodId String? // Optional payment method ID
+  id              String              @id
+  amount          Int
+  currency        String
+  paymentMethodId String?
+  userId          String
+  reportId        String
+  report          Report              @relation(fields: [reportId], references: [id], onDelete: Cascade)
   status          PaymentIntentStatus @default(requires_payment_method) // Enum for payment status
-  reportId        String? // Foreign key referencing Report
-  report          Report?             @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  User            User                @relation(fields: [userId], references: [id])
 
-  createdAt DateTime @default(now()) // Automatically set when created
-  updatedAt DateTime @updatedAt // Automatically updated when modified
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum ReportStatus {

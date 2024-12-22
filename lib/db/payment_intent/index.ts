@@ -1,31 +1,32 @@
 import prisma from '../../../lib/db/prisma_client'
-import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
 import {TReport} from "@/lib/types/TReport";
 import {Prisma} from "@prisma/client";
+import {PaymentIntent} from '@prisma/client';
+import {paymentIntentAdapter} from './adapters'
+import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
 
 
-export async function createPaymentIntent(report: TReport, paymentIntentData: TPaymentIntent ): Promise<TPaymentIntent> {
+export async function createPaymentIntent(
+    report: TReport,
+    paymentIntentData: PaymentIntent, // Omit<PaymentIntent, 'createdAt' | 'updatedAt' | 'reportId' | 'userId'>,
+    userId: string,
+): Promise<PaymentIntent> {
+    if (!report || !report.id) {
+        throw new Error(`Report object is missing or invalid`);
+    }
 
     try {
-
-        if (!report) {
-            throw `Report object is missing not found`;
-        }
-
-        // Step 2: Create PaymentIntent and link it to the existing report
-        const paymentIntent = await prisma.paymentIntent.create({
+        // Create PaymentIntent and link it to the existing report
+        return await prisma.paymentIntent.create({
             data: {
-                id: paymentIntentData.id, // PaymentIntent ID from Stripe
-                amount: paymentIntentData.amount,
-                currency: paymentIntentData.currency,
-                paymentMethodId: paymentIntentData.paymentMethodId,
-                status: paymentIntentData.status,
-                report: {
-                    connect: { id: report?.id }, // Link to the existing report
-                },
-            },
-        });
-        return paymentIntent;
+                ...paymentIntentAdapter(
+                    paymentIntentData,
+                    userId
+                ),
+                reportId: report.id,
+            } as PaymentIntent
+    })
+        ;
     } catch (error) {
         console.error('Error creating PaymentIntent:', error);
         throw error;
@@ -33,18 +34,24 @@ export async function createPaymentIntent(report: TReport, paymentIntentData: TP
         await prisma.$disconnect();
     }
 }
-type TUpdatePayment = (paymentIntent: TPaymentIntent | Record<string, unknown | string | number>) =>Promise<TPaymentIntent>;
 
-export const updatePaymentIntent:TUpdatePayment = async (pi = {}) => {
-    let paymentIntent: TPaymentIntent;
+
+type TUpdatePayment = (pi: TPaymentIntent, userId: string , reportId: string) => Promise<PaymentIntent>;
+
+export const updatePaymentIntent: TUpdatePayment = async (pi, userId, reportId) => {
+    let paymentIntent: PaymentIntent;
     try {
         const {id} = pi;
         // Perform the update
-         paymentIntent = await prisma.paymentIntent.update({
-            where: { id: id as string }, // Ensure the record exists
+        paymentIntent = await prisma.paymentIntent.update({
+            where: {id: id as string, userId}, // Ensure the record exists
             data: {
-                ...pi,
+                ...paymentIntentAdapter(pi, userId),
+                reportId,
                 updatedAt: new Date(), // Update the timestamp
+            },
+            include: {
+                report: true, // Include the associated Report in the response
             },
         });
 
@@ -55,7 +62,7 @@ export const updatePaymentIntent:TUpdatePayment = async (pi = {}) => {
         // Handle record not found error
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2025') {
-                throw `PaymentIntent with ID '${(pi as TPaymentIntent).id}' does not exist.`;
+                throw `PaymentIntent with ID '${(pi as PaymentIntent).id}' does not exist.`;
             }
         }
 
