@@ -62,7 +62,7 @@ export function PaymentTears({
                 {payment_tears_settings.map((p: TTier) => (
                     <Radio
                         //@ts-ignore
-                        disabled={p.disabled(totalItems)}
+                        disabled={p.disabled(totalItems) || !totalItems}
                         key={p.id}
                         value={p}
                         aria-label={p.title}

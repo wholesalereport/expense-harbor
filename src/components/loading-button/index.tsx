@@ -4,7 +4,7 @@ function SubmitButton({ type, isLoading = false, text = 'Submit' }) {
     return (
         <button
             type={type}
-            className={`px-4 py-2 rounded-md text-white font-medium min-w-[120px] 
+            className={`px-4 py-2 rounded-md text-white font-medium min-w-[120px]  
         ${isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500'} 
         flex items-center justify-center`}
             disabled={isLoading}

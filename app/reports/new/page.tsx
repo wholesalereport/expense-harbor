@@ -35,8 +35,9 @@ import { useRouter } from "next/router";
 export default function NewReport() {
     const [isLoading,setIsLoading] = useState<boolean>(false)
     const {isLoaded, isSignedIn, user} = useUser();
-    const {  userId } = useAuth();
-
+    const { userId } = useAuth();
+    const [initLoadingDialogOpen,setInitLoadingDialogOpen] = useState<boolean>(isLoading);
+    const [openConfirmationDialog, setOpenConfirmationDialog] = useState<boolean>(false)
     const checkoutFormRef = useRef();
 
     const [state, dispatch] = useReducer<TNewReportReducer, TReport>(newReportsReducer, {} as TReport, (initialState) => initialState);
@@ -108,7 +109,14 @@ export default function NewReport() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         setIsLoading(true)
+
+        if(!totalSize){
+            setUploadWarning("Please upload list of expenses to begin.")
+            setIsLoading(false)
+            return;
+        }
 
         if (!checkoutFormRef.current.validateForm()) {
             setIsLoading(false)
@@ -133,11 +141,15 @@ export default function NewReport() {
             headers: {"Content-Type": "application/json"},// Amount in centsF
             body: JSON.stringify({final: true})
         });
+        setOpenConfirmationDialog(true)
         setIsLoading(false)
     }
+    console.log("!!! initLoadingDialogOpen ",initLoadingDialogOpen," is loading ",isLoading)
 
     return (
         <div className={"space-y-12 mt-10"}>
+            <FormLoadingDialogComponent open={initLoadingDialogOpen} onClose={setInitLoadingDialogOpen}  />
+            <ReportCompleteDialogComponent open={openConfirmationDialog}/>
             <form onSubmit={handleSubmit}>
 
                 {/* Begining of the your file section */}
@@ -156,7 +168,7 @@ export default function NewReport() {
                                 </label>
                             </div>
                             <UploadDropZone handleOnDrop={handleUpload} onWarning={setUploadWarning}/>
-                            {uploadWarning && <div className={"mt-2"}><Warning message={uploadWarning}/></div>}
+                            {uploadWarning && <div className={"mt-2"}><Warning>{uploadWarning}</Warning></div>}
                             {collectExtraFileMeta && <div className="mt-2 grid grid-cols-2 gap-6" id="list-of-fields">
                                 <div>
                                     <ComboboxComponent
@@ -206,9 +218,15 @@ export default function NewReport() {
                     </div>
                     <div className="grid max-w-3xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
                         <div className="sm:col-span-4">
-                            <div className="mt-2">
+                            <div className="mt-2 flex flex-col justify-center h-full">
                                 {/* Payment Opitons */}
                                 {totalSize && <PaymentTears totalItems={totalSize} onPackageChange={updateField}/>}
+                                {!totalSize && <div>
+                                    <h2 className="text-base/7 font-semibold text-gray-900">Why is this section empty?</h2>
+                                    <p className="mt-1 text-sm/6 text-gray-600">
+                                        You need to upload list with your expenses first in order to begin
+                                    </p>
+                                </div>}
                             </div>
                         </div>
                     </div>
@@ -216,7 +234,7 @@ export default function NewReport() {
 
                 {/* End of the your file section */}
                 <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
-                    <div>
+                <div>
                         <h2 className="text-base/7 font-semibold text-gray-900">Payment</h2>
                         <p className="mt-1 text-sm/6 text-gray-600">
                             Payment for the report processing.
@@ -249,6 +267,8 @@ import {clerkClient} from "@clerk/nextjs";
 import {format} from "logform";
 import cli = format.cli;
 import SubmitButton from "@/src/components/loading-button";
+import FormLoadingDialogComponent from "@/src/components/checkout-form/FormLoadingDialogComponent";
+import ReportCompleteDialogComponent from "@/src/components/checkout-form/ReportCompleteDialogComponent";
 
 // const provideExtraFileInfo = useMemo(() => {
 // }, [uploadWarning])
