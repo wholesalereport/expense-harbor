@@ -18,6 +18,7 @@ import {auth, currentUser} from '@clerk/nextjs/server'
 import {upsertUser} from "@/lib/db/user";
 import {User} from "@clerk/clerk-sdk-node";
 import {TUserInput} from "@/lib/types/TUser";
+import {Report} from "@prisma/client";
 
 
 const stripe = require('stripe')(STP_SECRET_KEY);
@@ -38,7 +39,7 @@ const handler = async (request: Request) => {
     const selectedTier: TTier | undefined = payment_tears_settings.find(({id}) => tier.id === id);
     const totalLines = size(get(body, "file.data"))
 
-    let report: TReport;
+    let report: Report;
     let paymentIntent;
 
     const amount = selectedTier?.amount;
@@ -105,7 +106,8 @@ const handler = async (request: Request) => {
     return Response.json({
         status: 'ok',
         clientSecret: paymentIntent.client_secret,
-        pi: paymentIntent
+        pi: paymentIntent,
+        report
     })
 }
 

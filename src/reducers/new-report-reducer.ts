@@ -23,6 +23,7 @@ export  const newReportsReducer:TNewReportReducer  = (state, action) => {
 }
 
 export const getFile = state => get(state,"file",{});
+export const getFileData = state => get(state,"file.data",{});
 export const getFileSize = state => get(state,"file.data.length");
 export const hasTransactions = state => getFileSize(state) > 0;
 export const isUploadedFileFromAmazon = state => {

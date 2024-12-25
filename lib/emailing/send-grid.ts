@@ -70,3 +70,11 @@ export const sendEmailByType = async ({emailType, to, name,object, text, subject
             return;
     }
 }
+
+export const sendGeneralErrorAlert = async ({emailType = SEND_GENERAL_ERROR_ALERT, subject = 'General Alert Error',text}) => {
+    return await sendEmailByType({
+        emailType,
+        text,
+        subject
+    })
+}

@@ -1,13 +1,14 @@
 import prisma from '../../../lib/db/prisma_client'
 import {TReport} from "@/lib/types/TReport";
-import {Prisma} from "@prisma/client";
+import {Prisma,Report} from "@prisma/client";
 import {PaymentIntent} from '@prisma/client';
 import {paymentIntentAdapter} from './adapters'
 import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
+import {createLogMessage} from "@/lib/logger";
 
 
 export async function createPaymentIntent(
-    report: TReport,
+    report: Report,
     paymentIntentData: PaymentIntent, // Omit<PaymentIntent, 'createdAt' | 'updatedAt' | 'reportId' | 'userId'>,
     userId: string,
 ): Promise<PaymentIntent> {
@@ -54,8 +55,12 @@ export const updatePaymentIntent: TUpdatePayment = async (pi, userId, reportId) 
                 report: true, // Include the associated Report in the response
             },
         });
+        createLogMessage({
+            message: 'E/H - payment intent updated successfully',
+            messageType: 'PAYMENT_INTENT_UPDATE',
+            data: {paymentIntent},
+        })
 
-        console.log('PaymentIntent updated successfully:', paymentIntent);
         return paymentIntent;
 
     } catch (error) {

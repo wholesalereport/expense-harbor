@@ -49,7 +49,7 @@ export async function getRequestDetails(req: Request): Promise<Record<string, an
 
 
 export function withErrorHandling(
-    handler: (req: Request, params: { [key: string]: any }) => Promise<Response>
+    handler: (req: Request, params?: { [key: string]: any } | undefined) => Promise<Response>
 ) {
     return async (req: Request, params: { [key: string]: any }) => {
         try {
@@ -59,47 +59,17 @@ export function withErrorHandling(
             const requestDetails = await  getRequestDetails(req);
 
             sendEmailByType({
+                subject: 'E/H - Alert - Exception',
                 emailType: SEND_GENERAL_ERROR_ALERT,
-                text: JSON.stringify({errorStack: error.stack,errorMessage: error.message,requestDetails})
+                text: JSON.stringify({error,errorStack: error.stack,errorMessage: error.message,requestDetails})
             });
             return NextResponse.json(
                 {
-                    status: "error",
                     message: error.message || "An unexpected error occurred.",
                 },
+                /* This second option sets status of http response */
                 { status: 500 }
             );
         }
     };
 }
-
-
-
-// export function withErrorHandling(
-//     handler: (req: Request, params: { [key: string]: any }) => Promise<Response>
-// ) {
-//     return async (req: Request,params): Promise<Response> => {
-//         const p = await params;
-//
-//         try {
-//             return await handler(req, params);
-//         } catch (error) {
-//             const errorDetails = {
-//                 ...(await getRequestDetails(req)),
-//                 error,
-//                 errorStack: _.get(error,'stack'),
-//                 errorMessage: _.get(error,'message'),
-//                 params: p
-//             };
-//
-//             console.error('Error caught in higher-order function:', error);
-//             sendEmailByType({
-//                 emailType: SEND_GENERAL_ERROR_ALERT,
-//                 text: JSON.stringify(errorDetails,null,2)
-//             });
-//             return  NextResponse.json(
-//                 { status: 500, error: JSON.stringify({ error}) }
-//             );
-//         }
-//     };
-// }

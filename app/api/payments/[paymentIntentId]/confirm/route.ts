@@ -10,7 +10,6 @@ import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
 const stripe = require('stripe')(STP_SECRET_KEY);
 
 const handler = async (request: Request, {params}) => {
-    console.log("!!! params ")
     const {paymentIntentId} = await params || {};
     const {userId} = await auth()
     const user = await currentUser();

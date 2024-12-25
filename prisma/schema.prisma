@@ -30,6 +30,8 @@ model Report {
   createdAt  DateTime        @default(now()) // Automatically set when created
   updatedAt  DateTime        @updatedAt // Automatically updated when modified
   deletedAt  DateTime? // Soft delete field
+
+  @@unique([id, userId])
 }
 
 model PaymentIntent {

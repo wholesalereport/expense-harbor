@@ -13,3 +13,9 @@ export const COMPLETING_PAYMENT_REPORT = 'COMPLETING_PAYMENT_REPORT'
 /* About Report */
 
 export const CREATED_REPORT = 'CREATED_REPORT';
+
+/* S3 related */
+export const S3_FILE_UPLOAD_COMPLETE = 'S3_FILE_UPLOAD_COMPLETE';
+
+/* Pub Sub */
+export const SEND_MESSAGE_TO_PUB_SUB = 'SEND_MESSAGE_TO_PUB_SUB';

@@ -36,7 +36,8 @@ export type ReportStatus = (typeof REPORT_STATUSES)[keyof typeof REPORT_STATUSES
 
 export type TReport = {
     id?: string; // Auto-incrementing primary key
-    user?: TUserInput; // Foreign key referencing User
+    user: TUserInput; // Foreign key referencing User
+    userId: string,
     status: ReportStatus; // ReportStatus enum
     tier?:TTier;
     tierId: string;

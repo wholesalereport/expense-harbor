@@ -1,46 +1,49 @@
 //@ts-nocheck
 "use client";
 
-import React, { useReducer, useRef, useState} from 'react'
+import React, {useReducer, useRef, useState} from 'react'
 import {UploadDropZone} from '@/src/components/UploadDropZone'
 import {PageData} from "@/types";
 import {Checkout} from "@/src/components/checkout-form";
 import {
-    getAvailableFields, getFileSize, getSelectedTier,
+    getAvailableFields, getFileData, getFileSize, getSelectedTier,
     hasTransactions,
     isUploadedFileFromAmazon,
     newReportsReducer, TNewReportReducer
 } from "@/src/reducers/new-report-reducer";
 import {UPDATE} from "@/constants/reducers";
 import ComboboxComponent from "@/src/components/elements/combobox";
-import {get, isNull, map} from 'lodash'
+import {get, isNull, map, size} from 'lodash'
 import {
     AMAZON_ORDER_DATE_INDEX,
     AMAZON_ORDER_ID_INDEX,
     AMAZON_TITLE_INDEX,
     AMAZON_TOTAL_PAYED_INDEX,
 } from "@/lib/utils/fileUtils";
-import {Warning} from "@/src/components/state_notifications";
+import ErrorsAlert, {Warning} from "@/src/components/state_notifications";
 import {TReport, TReportState} from "@/lib/types/TReport";
 import {useUser} from "@clerk/nextjs";
 import {SUCCESS_STATUS} from "@/constants";
 import {PaymentTears} from "@/src/components/checkout-form/PaymentTears";
 import {tierCalculator} from "@/lib/pricing";
-import {TPackage} from "@/src/components/checkout-form/TPackage";
 import {omit} from "next/dist/shared/lib/router/utils/omit";
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/router";
+import {useAuth} from "@clerk/nextjs";
+import {useRouter} from 'next/navigation'
 
+
+import SubmitButton from "@/src/components/loading-button";
+import FormLoadingDialogComponent from "@/src/components/checkout-form/FormLoadingDialogComponent";
+import ReportCompleteDialogComponent from "@/src/components/checkout-form/ReportCompleteDialogComponent";
 
 export default function NewReport() {
-    const [isLoading,setIsLoading] = useState<boolean>(false)
-    const {isLoaded, isSignedIn, user} = useUser();
-    const { userId } = useAuth();
-    const [initLoadingDialogOpen,setInitLoadingDialogOpen] = useState<boolean>(isLoading);
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+
+    const [initLoadingDialogOpen, setInitLoadingDialogOpen] = useState<boolean>(isLoading);
     const [openConfirmationDialog, setOpenConfirmationDialog] = useState<boolean>(false)
     const checkoutFormRef = useRef();
-
     const [state, dispatch] = useReducer<TNewReportReducer, TReport>(newReportsReducer, {} as TReport, (initialState) => initialState);
+    const [errors, setErrors] = useState<string[]>([])
 
     //@ts-ignore
     const updateField = ({name, value}: TReportState) => dispatch({type: UPDATE, payload: {[name]: value}});
@@ -56,7 +59,9 @@ export default function NewReport() {
             }, {})
         })
     }
-
+    const navigateToDashboard = async () => {
+        await router.push('/dashboard');
+    };
 
     const buildValuePicker = ((field, option) => {
         if (option && !isNull(option)) {
@@ -76,7 +81,6 @@ export default function NewReport() {
     const collectExtraFileMeta = isHasTransactions && !isAmazonFile;
     const totalSize = getFileSize(state);
     const selectedTier = getSelectedTier(state);
-
 
 
     const handleInputChange = ({target = {}} = {}) => {
@@ -109,46 +113,79 @@ export default function NewReport() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         setIsLoading(true)
+        try {
+            if (!totalSize) {
+                setUploadWarning("Please upload list of expenses to begin.")
+                setIsLoading(false)
+                return;
+            }
 
-        if(!totalSize){
-            setUploadWarning("Please upload list of expenses to begin.")
+            if (!checkoutFormRef.current.validateForm()) {
+                setIsLoading(false)
+                return;
+            }
+
+            setOpenConfirmationDialog(true)
+
+            const response = await fetch("/api/payments/intent", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(omit(state, ["availableFields"])) // Amount in centsF
+            });
+            const {clientSecret, report} = await response.json();
+            const {error, paymentIntent} = await checkoutFormRef.current.handlePayment(clientSecret);
+            if (!_.isEmpty(error) || !get(paymentIntent, "status") === SUCCESS_STATUS) {
+                /*TODO: need to send this to the server */
+                console.debug("Payment failed.", error, get(paymentIntent, "status"));
+                setIsLoading(false);
+                setOpenConfirmationDialog(false)
+                return;
+            }
+
+            const {confirmError} = await fetch(`/api/payments/${paymentIntent.id}/confirm`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},// Amount in centsF
+                body: JSON.stringify({final: true})
+            });
+            if (confirmError) {
+                setIsLoading(false);
+                setOpenConfirmationDialog(false)
+            }
+
+            await fetch(`/api/reports`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},// Amount in centsF
+                body: JSON.stringify({
+                    data: getFileData(state),
+                    report:{
+                        ...report,
+                        file: {
+                            meta: {
+                                fields: get(state, "file.meta.fields"),
+                                delimiter: get(state, "file.meta.delimiter")
+                            }
+                        },
+                        columnsMapping: state?.columnsMapping,
+                    }
+                })
+            })
+            setOpenConfirmationDialog(false)
             setIsLoading(false)
-            return;
-        }
+            await navigateToDashboard();
 
-        if (!checkoutFormRef.current.validateForm()) {
+        } catch(e) {
+            console.error(e);
+            setErrors([e?.message || "Oops, something went wrong. We are on it! If you don't hear back from us soon please contact us"])
+            setOpenConfirmationDialog(false)
             setIsLoading(false)
-            return;
-        }
-        const response = await fetch("/api/payments/intent", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(omit(state, ["availableFields"])) // Amount in centsF
-        });
-        const {clientSecret} = await response.json();
-        const {error, paymentIntent} = await checkoutFormRef.current.handlePayment(clientSecret);
-
-        if (!get(paymentIntent, "status") === SUCCESS_STATUS) {
-            /*TODO: need to send this to the server */
-            console.error("Payment failed.", error, get(paymentIntent, "status"));
-            return;
         }
 
-        await fetch(`/api/payments/${paymentIntent.id}/confirm`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},// Amount in centsF
-            body: JSON.stringify({final: true})
-        });
-        setOpenConfirmationDialog(true)
-        setIsLoading(false)
     }
-    console.log("!!! initLoadingDialogOpen ",initLoadingDialogOpen," is loading ",isLoading)
 
     return (
         <div className={"space-y-12 mt-10"}>
-            <FormLoadingDialogComponent open={initLoadingDialogOpen} onClose={setInitLoadingDialogOpen}  />
+            <FormLoadingDialogComponent open={initLoadingDialogOpen} onClose={setInitLoadingDialogOpen}/>
             <ReportCompleteDialogComponent open={openConfirmationDialog}/>
             <form onSubmit={handleSubmit}>
 
@@ -222,7 +259,8 @@ export default function NewReport() {
                                 {/* Payment Opitons */}
                                 {totalSize && <PaymentTears totalItems={totalSize} onPackageChange={updateField}/>}
                                 {!totalSize && <div>
-                                    <h2 className="text-base/7 font-semibold text-gray-900">Why is this section empty?</h2>
+                                    <h2 className="text-base/7 font-semibold text-gray-900">Why is this section
+                                        empty?</h2>
                                     <p className="mt-1 text-sm/6 text-gray-600">
                                         You need to upload list with your expenses first in order to begin
                                     </p>
@@ -234,7 +272,7 @@ export default function NewReport() {
 
                 {/* End of the your file section */}
                 <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
-                <div>
+                    <div>
                         <h2 className="text-base/7 font-semibold text-gray-900">Payment</h2>
                         <p className="mt-1 text-sm/6 text-gray-600">
                             Payment for the report processing.
@@ -249,11 +287,17 @@ export default function NewReport() {
                     </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-end gap-x-6">
-                    <button type="button" className="text-sm/6 font-semibold text-gray-900">
-                        Cancel
-                    </button>
-                    <SubmitButton type={"submit"} isLoading={isLoading}/>
+                <div className="mt-6 flex gap-2 flex-col">
+                    <div>
+                        {size(errors) > 0 && <ErrorsAlert errors={errors}/>}
+                    </div>
+                    <div className={"items-center justify-end flex gap-x-6"}>
+                        <button type="button" className="text-sm/6 font-semibold text-gray-900">
+                            Cancel
+                        </button>
+                        <SubmitButton type={"submit"} isLoading={isLoading}/>
+                    </div>
+
                 </div>
             </form>
         </div>
@@ -261,24 +305,5 @@ export default function NewReport() {
 
     )
 }
-
-import {getEmail, getFullName} from "@/src/adapters";
-import {clerkClient} from "@clerk/nextjs";
-import {format} from "logform";
-import cli = format.cli;
-import SubmitButton from "@/src/components/loading-button";
-import FormLoadingDialogComponent from "@/src/components/checkout-form/FormLoadingDialogComponent";
-import ReportCompleteDialogComponent from "@/src/components/checkout-form/ReportCompleteDialogComponent";
-
-// const provideExtraFileInfo = useMemo(() => {
-// }, [uploadWarning])
-//const { isLoaded, isSignedIn, user } = useUser();
-// if (!isLoaded) {
-//     return <div>Loading...</div>;
-// }
-//
-// if (!isSignedIn) {
-//     return <div>Please sign in</div>;
-// }
 
 

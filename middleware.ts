@@ -1,15 +1,25 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server'; // Import NextResponse
 import {DEBUG_CLERK_SERVICES} from "@/constants/clerk";
 
-
-const isProtectedRoute = createRouteMatcher(['/reports(.*)','/api(.*)'])
+const protectedRoutes = createRouteMatcher(['/reports(.*)','/api/(.*)']);
+const publicApiRoutes = createRouteMatcher(['/api/reports/status']); // Match the specific public API route
 
 export default clerkMiddleware(
     async (auth, req) => {
-    if (isProtectedRoute(req)) {
-        await auth.protect(); // Protect this route
-    }
-},{ debug: DEBUG_CLERK_SERVICES === 'YES' })
+        if (publicApiRoutes(req)) {
+            return NextResponse.next(); // Important: Return NextResponse.next()
+        }
+
+        if (protectedRoutes(req)) {
+                await auth.protect(); // Protect this route if not public
+        } else {
+            console.log("req is not protected, letting it go");
+        }
+        return NextResponse.next();
+    },
+    { debug: DEBUG_CLERK_SERVICES === 'YES' }
+);
 
 export const config = {
     matcher: [
