@@ -8,8 +8,22 @@ import {sendGeneralErrorAlert} from "@/lib/emailing/send-grid";
 import {auth, currentUser} from "@clerk/nextjs/server";
 import {buildMessage} from "@/lib/pub_sub/helpers";
 import {sendPubSubMessage} from "@/lib/pub_sub/client";
+import {getReportsByUserId} from "@/lib/db";
 
-const handler = async (request: Request): Promise<Response> => {
+const getHandler = async(request: Request):Promise<Response> => {
+    const {userId} = await auth()
+    if(!userId){
+        return Response.json({status: 'User is not authorised'},{status: 403})
+    }
+    const reports =  await getReportsByUserId(userId);
+
+    return Response.json({
+        status: 'ok',
+        reports
+    })
+}
+
+const postHandler = async (request: Request): Promise<Response> => {
     const {userId} = await auth()
     const user = await currentUser();
 
@@ -85,4 +99,5 @@ const handler = async (request: Request): Promise<Response> => {
 
 }
 
-export const POST = withErrorHandling(handler)
+export const POST = withErrorHandling(postHandler)
+export const GET = withErrorHandling(getHandler);

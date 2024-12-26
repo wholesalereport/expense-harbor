@@ -184,7 +184,7 @@ export default function NewReport() {
     }
 
     return (
-        <div className={"space-y-12 mt-10"}>
+        <div className={"mx-auto max-w-7xl sm:px-6 lg:px-8 mt-10"}>
             <FormLoadingDialogComponent open={initLoadingDialogOpen} onClose={setInitLoadingDialogOpen}/>
             <ReportCompleteDialogComponent open={openConfirmationDialog}/>
             <form onSubmit={handleSubmit}>

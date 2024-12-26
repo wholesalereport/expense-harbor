@@ -8,7 +8,7 @@ export default function RootLayout({children}: PropsWithChildren) {
         <ReportsLayoutProvider>
             <div className={""}>
                 <MainMenu/>
-                <div className="container mx-auto sm:px-6 lg:px-8">
+                <div>
                     {children}
                 </div>
             </div>

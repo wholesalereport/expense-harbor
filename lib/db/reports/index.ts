@@ -40,3 +40,15 @@ export async function updateReport(report: Report) {
     });
 
 }
+
+export async function getReportsByUserId(userId: string): Promise<Report[]> {
+       return prisma.report.findMany({
+            where: {
+                userId: userId,
+                deletedAt: null
+            },
+            orderBy: {
+                createdAt: 'desc', // Order by creation date, newest first
+            },
+        });
+}
