@@ -11,6 +11,7 @@ import {ReportsComponent} from "@/src/components/reports/ReportsComponent";
 import PieChartComponent from '../../src/components/visualisations/PieChartComponent'
 import {ChartData} from "@/lib/types/ChartDataType";
 import TransactionsTable from "@/src/components/reports/TransactionsTableComponent";
+import {TableSkeletonComponent} from "@/src/components/reports/TableSkeletonCompnent";
 
 
 type TAggregateResponse = {
@@ -139,9 +140,40 @@ export default function Page() {
                                 </div>
                             </dl>
                             <div className="mt-6 pt-6 sm:pr-4 w-full h-96">
-                                {categoryTotals && <PieChartComponent data={categoryTotals} />}
+                                {
+                                    loadingCategoryTotals &&
+                                    <div className="relative w-64 h-64 flex items-center justify-center">
+                                        <div id="skeleton"
+                                             className="absolute inset-0 bg-gray-200 rounded-full animate-pulse flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                 strokeWidth="1.5" stroke="currentColor"
+                                                 className="w-12 h-12 text-gray-500">
+                                                <path strokeLinecap="round" strokeLinejoin="round"
+                                                      d="M11.25 2.25v9.5h9.5m-9.5-9.5a9.001 9.001 0 016.364 15.364A9.001 9.001 0 0111.25 2.25zm9.5 9.5a9.001 9.001 0 01-9.5 9.5m9.5-9.5h-9.5"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                }
+                                {!loadingCategoryTotals && categoryTotals && <PieChartComponent data={categoryTotals}/>}
                             </div>
-                            {!isEmpty(transactions) && <TransactionsTable data={transactions} />}
+                            <div className="sm:flex sm:items-center mb-5">
+                                <div className="sm:flex-auto">
+                                    <h1 className="text-base font-semibold text-gray-900">Transactions</h1>
+                                    <p className="mt-2 text-sm text-gray-700">
+                                        A list of all the transactions that we've used to calculate totals.
+                                    </p>
+                                </div>
+                                <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                                    {/*<button*/}
+                                    {/*    type="button"*/}
+                                    {/*    className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"*/}
+                                    {/*>*/}
+                                    {/*    Add user*/}
+                                    {/*</button>*/}
+                                </div>
+                            </div>
+                            {loadingTransactions && <TableSkeletonComponent/>}
+                            {!isEmpty(transactions) && <TransactionsTable data={transactions}/>}
                         </div>
                     </div>
                 </div>
