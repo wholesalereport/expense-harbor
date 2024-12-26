@@ -1,5 +1,6 @@
 'use client'
 import React, {useEffect, useState} from 'react';
+import {FaFileCsv, FaFileExcel} from 'react-icons/fa'; // Install react-icons if not already installed
 
 import _, {isEmpty, isNull} from "lodash";
 import {NoReportsComponent} from "@/src/components/reports/NoReportsComponent";
@@ -12,6 +13,7 @@ import PieChartComponent from '../../src/components/visualisations/PieChartCompo
 import {ChartData} from "@/lib/types/ChartDataType";
 import TransactionsTable from "@/src/components/reports/TransactionsTableComponent";
 import {TableSkeletonComponent} from "@/src/components/reports/TableSkeletonCompnent";
+import {exportToCSV, exportToExcel} from "@/src/components/helpers/export";
 
 
 type TAggregateResponse = {
@@ -62,6 +64,7 @@ export default function Page() {
                     setCategoryTotals(category_totals)
                 })
                 .catch(console.error)
+                .catch(console.error)
                 .finally(() => {
                     setLoadingCategoryTotals(false)
                 })
@@ -103,6 +106,8 @@ export default function Page() {
 
 
 
+
+
     return (
         <>
             <main>
@@ -115,7 +120,7 @@ export default function Page() {
                         {/* Report */}
                         <div
                             className="-mx-4 px-4 py-8 shadow-sm ring-1 ring-gray-900/5 sm:mx-0 sm:rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
-                            <h2 className="text-base font-semibold text-gray-900">Report</h2>
+                            <h2 className="text-base font-semibold text-gray-900">Categorised Transactions Report</h2>
                             <dl className="mt-6 grid grid-cols-1 text-sm/6 sm:grid-cols-2">
                                 <div className="sm:pr-4">
                                     <dt className="inline text-gray-500">Created on:</dt>
@@ -148,8 +153,6 @@ export default function Page() {
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                  strokeWidth="1.5" stroke="currentColor"
                                                  className="w-12 h-12 text-gray-500">
-                                                <path strokeLinecap="round" strokeLinejoin="round"
-                                                      d="M11.25 2.25v9.5h9.5m-9.5-9.5a9.001 9.001 0 016.364 15.364A9.001 9.001 0 0111.25 2.25zm9.5 9.5a9.001 9.001 0 01-9.5 9.5m9.5-9.5h-9.5"/>
                                             </svg>
                                         </div>
                                     </div>
@@ -164,12 +167,23 @@ export default function Page() {
                                     </p>
                                 </div>
                                 <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                                    {/*<button*/}
-                                    {/*    type="button"*/}
-                                    {/*    className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"*/}
-                                    {/*>*/}
-                                    {/*    Add user*/}
-                                    {/*</button>*/}
+                                    {transactions && <div className="flex space-x-4">
+                                        {/* Export to Excel */}
+                                        <button
+                                            onClick={() => exportToExcel(transactions, 'Report.xlsx')}
+                                            className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none"
+                                        >
+                                            <FaFileExcel size={16}/>
+                                        </button>
+
+                                        {/* Export to CSV */}
+                                        <button
+                                            onClick={() => exportToCSV(transactions, 'Report.csv')}
+                                            className="flex items-center justify-center w-8 h-8 bg-white text-blue-500 border border-blue-500 rounded-md hover:bg-blue-100 focus:outline-none"
+                                        >
+                                            <FaFileCsv size={16}/>
+                                        </button>
+                                    </div>}
                                 </div>
                             </div>
                             {loadingTransactions && <TableSkeletonComponent/>}
