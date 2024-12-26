@@ -31,6 +31,7 @@ const handler = async (request: Request) => {
     if (!userId) {
         return new Response('Unauthorized', {status: 401})
     }
+
     /*TODO: need to check for error on user create */
     if (!isNull(user)) upsertUser(user);
 
@@ -51,7 +52,7 @@ const handler = async (request: Request) => {
 
     report = await createReport({
         ...body,
-        user,
+        userId,
         totalLines
     });
 

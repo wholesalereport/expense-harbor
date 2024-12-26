@@ -25,8 +25,17 @@ export const uploadFileToS3 = async ({
 
     return result;
 }
+const streamToString = (stream) => {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        //@ts-ignore
+        stream.on("data", (chunk) => chunks.push(chunk));
+        stream.on("error", reject);
+        stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+    });
+};
 
-export const getUploadedFileFromS3 = async ({
+export const getFileFromS3 = async ({
                                                 bucket = S3_DEFAULT_BUCKET,
                                                 fileName
                                             }) => {
@@ -35,7 +44,10 @@ export const getUploadedFileFromS3 = async ({
         Bucket: bucket,
         Key: fileName
     })
-    return s3Client.send(command);
+    const response = await s3Client.send(command);
+    // Extract the stream from the response
+    // Convert stream to string
+    return streamToString(response.Body);
 }
 
 export const listFilesInS3 = async ({
