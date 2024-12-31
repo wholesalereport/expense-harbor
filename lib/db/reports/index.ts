@@ -51,3 +51,15 @@ export async function getReportsByUserId(userId: string): Promise<Report[]> {
             },
         });
 }
+
+export async function findReportByIdAndUserId(id: string, userId: string) {
+
+        return prisma.report.findUnique({
+            where: {
+                id_userId: {
+                    id,
+                    userId,
+                },
+            },
+        });
+}

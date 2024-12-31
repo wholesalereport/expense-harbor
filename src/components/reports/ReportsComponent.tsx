@@ -2,6 +2,7 @@ import _ from "lodash";
 import React from "react";
 import {REPORT_STATUSES} from "@/constants";
 import {Report} from "@prisma/client";
+import {getTitle} from "@/src/components/reports/helpers";
 const classNameForReportByStatus = (status: string):string => {
     switch (status){
         case REPORT_STATUSES.OPEN:
@@ -48,7 +49,7 @@ export const ReportsComponent = ({reports,selectedReport,setSelectedReport}) => 
                                             <p className="text-sm/6 font-semibold text-gray-900 hover:cursor-pointer">
                                                                 <span
                                                                     className="absolute inset-x-0 -top-px bottom-0"/>
-                                                {_.truncate(report?.name, {length: 20})}
+                                                {_.truncate(getTitle(report), {length: 25})}
                                             </p>
                                             <p className="mt-1 flex text-xs/5 text-gray-500">
                                                 {report?.createdAt && new Date(report?.createdAt).toDateString()}

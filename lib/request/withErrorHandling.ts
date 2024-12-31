@@ -1,7 +1,7 @@
 //@ts-nocheck
 import {sendEmailByType} from "@/lib/emailing/send-grid";
 import {SEND_GENERAL_ERROR_ALERT} from "@/constants/emailing";
-import _ from "lodash";
+import _, {isNull} from "lodash";
 import { NextResponse } from "next/server";
 
 export async function getRequestDetails(req: Request): Promise<Record<string, any>> {
@@ -23,7 +23,7 @@ export async function getRequestDetails(req: Request): Promise<Record<string, an
         let body: Record<string, any> | null = null;
         if (req.method !== "GET" && req.method !== "HEAD") {
             const contentType = headers["content-type"];
-            if (contentType && contentType.includes("application/json")) {
+            if (contentType && contentType.includes("application/json") && !isNull(body)) {
                 try {
                     body = await req.json(); // Parse JSON body
                 } catch (error) {
