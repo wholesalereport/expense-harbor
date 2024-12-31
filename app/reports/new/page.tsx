@@ -22,12 +22,10 @@ import {
 } from "@/lib/utils/fileUtils";
 import ErrorsAlert, {Warning} from "@/src/components/state_notifications";
 import {TReport, TReportState} from "@/lib/types/TReport";
-import {useUser} from "@clerk/nextjs";
 import {SUCCESS_STATUS} from "@/constants";
 import {PaymentTears} from "@/src/components/checkout-form/PaymentTears";
 import {tierCalculator} from "@/lib/pricing";
 import {omit} from "next/dist/shared/lib/router/utils/omit";
-import {useAuth} from "@clerk/nextjs";
 import {useRouter} from 'next/navigation'
 
 
@@ -60,7 +58,7 @@ export default function NewReport() {
         })
     }
     const navigateToDashboard = async () => {
-        await router.push('/dashboard');
+        await router.push('/reports');
     };
 
     const buildValuePicker = ((field, option) => {
@@ -158,7 +156,7 @@ export default function NewReport() {
                 headers: {"Content-Type": "application/json"},// Amount in centsF
                 body: JSON.stringify({
                     data: getFileData(state),
-                    report:{
+                    report: {
                         ...report,
                         file: {
                             meta: {
@@ -174,7 +172,7 @@ export default function NewReport() {
             setIsLoading(false)
             await navigateToDashboard();
 
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             setErrors([e?.message || "Oops, something went wrong. We are on it! If you don't hear back from us soon please contact us"])
             setOpenConfirmationDialog(false)
@@ -188,9 +186,41 @@ export default function NewReport() {
             <FormLoadingDialogComponent open={initLoadingDialogOpen} onClose={setInitLoadingDialogOpen}/>
             <ReportCompleteDialogComponent open={openConfirmationDialog}/>
             <form onSubmit={handleSubmit}>
-
-                {/* Begining of the your file section */}
                 <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
+                    <div>
+                        <h2 className="text-base/7 font-semibold text-gray-900">Report Name</h2>
+                        <p className="mt-1 text-sm/6 text-gray-600">
+                            Name that you can use to remember where the transactions are from. For example: Amazon 2024
+                        </p>
+                    </div>
+                    <div className="grid max-w-36xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
+                        <div className="sm:col-span-4">
+                            <div className="flex justify-between">
+                                <label htmlFor="ownerName"
+                                       className="block text-sm/6 font-medium text-gray-900">
+                                    Report Name
+                                </label>
+                                <span id="email-optional" className="text-sm/6 text-gray-500">
+                                    Optional
+                                </span>
+                            </div>
+                            <div className="mt-2">
+                                <input
+                                    id="name"
+                                    name="name"
+                                    type="text"
+                                    maxLength={50}
+                                    onChange={e => updateField({name: 'name',value: e.target.value })}
+                                    aria-describedby="email-optional"
+                                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* Begining of the your file section */}
+                <div
+                    className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
                     <div>
                         <h2 className="text-base/7 font-semibold text-gray-900">Your File</h2>
                         <p className="mt-1 text-sm/6 text-gray-600">
@@ -200,53 +230,60 @@ export default function NewReport() {
                     <div className="grid max-w-36xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
                         <div className="sm:col-span-4">
                             <div className="flex justify-between">
-                                <label htmlFor="ownerName" className="block text-sm/6 font-medium text-gray-900">
+                                <label htmlFor="ownerName"
+                                       className="block text-sm/6 font-medium text-gray-900">
                                     File with transactions
                                 </label>
                             </div>
                             <UploadDropZone handleOnDrop={handleUpload} onWarning={setUploadWarning}/>
                             {uploadWarning && <div className={"mt-2"}><Warning>{uploadWarning}</Warning></div>}
-                            {collectExtraFileMeta && <div className="mt-2 grid grid-cols-2 gap-6" id="list-of-fields">
-                                <div>
-                                    <ComboboxComponent
-                                        label={"Column for Product Name"}
-                                        updateParent={(option = {}) => buildValuePicker('productTitle', option)}
-                                        options={options}/>
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Select the column with the product name.
-                                    </p>
-                                </div>
-                                <div>
-                                    <ComboboxComponent
-                                        label={"Column for Total Payed"}
-                                        updateParent={(option = {}) => buildValuePicker('totalPayed', option)}
-                                        options={options}/>
-                                    <p className="mt-2 text-sm text-gray-500">Select the column with the amount you
-                                        paid.</p>
-                                </div>
-                                <div>
-                                    <ComboboxComponent
-                                        label={"Column for Order ID"}
-                                        updateParent={(option = {}) => buildValuePicker('orderId', option)}
-                                        options={options}
-                                        isOptional={true}
-                                    />
-                                    <p className="mt-2 text-sm text-gray-500">Select the column with order id.</p>
-                                </div>
-                                <div>
-                                    <ComboboxComponent
-                                        label={"Column for Order Date"}
-                                        updateParent={(option = {}) => buildValuePicker('orderDate', option)}
-                                        options={options}
-                                        isOptional={true}
-                                    />
-                                    <p className="mt-2 text-sm text-gray-500">Select the column with order date.</p>
-                                </div>
-                            </div>}
+                            {collectExtraFileMeta &&
+                                <div className="mt-2 grid grid-cols-2 gap-6" id="list-of-fields">
+                                    <div>
+                                        <ComboboxComponent
+                                            label={"Column for Product Name"}
+                                            updateParent={(option = {}) => buildValuePicker('productTitle', option)}
+                                            options={options}/>
+                                        <p className="mt-2 text-sm text-gray-500">
+                                            Select the column with the product name.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <ComboboxComponent
+                                            label={"Column for Total Payed"}
+                                            updateParent={(option = {}) => buildValuePicker('totalPayed', option)}
+                                            options={options}/>
+                                        <p className="mt-2 text-sm text-gray-500">Select the column with the
+                                            amount
+                                            you
+                                            paid.</p>
+                                    </div>
+                                    <div>
+                                        <ComboboxComponent
+                                            label={"Column for Order ID"}
+                                            updateParent={(option = {}) => buildValuePicker('orderId', option)}
+                                            options={options}
+                                            isOptional={true}
+                                        />
+                                        <p className="mt-2 text-sm text-gray-500">Select the column with order
+                                            id.</p>
+                                    </div>
+                                    <div>
+                                        <ComboboxComponent
+                                            label={"Column for Order Date"}
+                                            updateParent={(option = {}) => buildValuePicker('orderDate', option)}
+                                            options={options}
+                                            isOptional={true}
+                                        />
+                                        <p className="mt-2 text-sm text-gray-500">Select the column with order
+                                            date.</p>
+                                    </div>
+                                </div>}
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
+                <div
+                    className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
                     <div>
                         <h2 className="text-base/7 font-semibold text-gray-900">Totals</h2>
                         <p className="mt-1 text-sm/6 text-gray-600">
@@ -257,7 +294,8 @@ export default function NewReport() {
                         <div className="sm:col-span-4">
                             <div className="mt-2 flex flex-col justify-center h-full">
                                 {/* Payment Opitons */}
-                                {totalSize && <PaymentTears totalItems={totalSize} onPackageChange={updateField}/>}
+                                {totalSize &&
+                                    <PaymentTears totalItems={totalSize} onPackageChange={updateField}/>}
                                 {!totalSize && <div>
                                     <h2 className="text-base/7 font-semibold text-gray-900">Why is this section
                                         empty?</h2>
@@ -271,7 +309,8 @@ export default function NewReport() {
                 </div>
 
                 {/* End of the your file section */}
-                <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
+                <div
+                    className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
                     <div>
                         <h2 className="text-base/7 font-semibold text-gray-900">Payment</h2>
                         <p className="mt-1 text-sm/6 text-gray-600">

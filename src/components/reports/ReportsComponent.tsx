@@ -48,7 +48,7 @@ export const ReportsComponent = ({reports,selectedReport,setSelectedReport}) => 
                                             <p className="text-sm/6 font-semibold text-gray-900 hover:cursor-pointer">
                                                                 <span
                                                                     className="absolute inset-x-0 -top-px bottom-0"/>
-                                                {_.truncate(report.id, {length: 20})}
+                                                {_.truncate(report?.name, {length: 20})}
                                             </p>
                                             <p className="mt-1 flex text-xs/5 text-gray-500">
                                                 {report?.createdAt && new Date(report?.createdAt).toDateString()}

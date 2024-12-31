@@ -16,10 +16,9 @@ import {createPaymentIntent} from "@/lib/db/payment_intent";
 import {TPaymentIntent} from "@/lib/types/TPaymentIntent";
 import {auth, currentUser} from '@clerk/nextjs/server'
 import {upsertUser} from "@/lib/db/user";
-import {User} from "@clerk/clerk-sdk-node";
 import {TUserInput} from "@/lib/types/TUser";
-import {Report} from "@prisma/client";
-
+import {Report,PaymentIntent} from "@prisma/client";
+import {omit} from 'lodash'
 
 const stripe = require('stripe')(STP_SECRET_KEY);
 
@@ -37,11 +36,12 @@ const handler = async (request: Request) => {
 
     const body = await request.json();
     const tier = get(body, 'tier', {});
+    const tierId = get(tier,"id");
     const selectedTier: TTier | undefined = payment_tears_settings.find(({id}) => tier.id === id);
     const totalLines = size(get(body, "file.data"))
 
     let report: Report;
-    let paymentIntent;
+    let paymentIntent: PaymentIntent & Pick<TPaymentIntent,"client_secret">;
 
     const amount = selectedTier?.amount;
 
@@ -51,9 +51,10 @@ const handler = async (request: Request) => {
 
 
     report = await createReport({
-        ...body,
+        ...omit(body,["file","acceptedFiles","columnsMapping","tier"]) as Report,
         userId,
-        totalLines
+        totalLines,
+        tierId
     });
 
     const reportId = get(report,"id");

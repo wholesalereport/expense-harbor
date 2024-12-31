@@ -9,10 +9,9 @@ export const createReport: TCreateReport = async (report: Report) => {
 
     return prisma.report.create({
         data: {
-            userId: report.userId,
+            ...report,
             tierId: report.tierId || "",
-            status: REPORT_STATUSES.PENDING,
-            totalLines: report.totalLines,
+            status: REPORT_STATUSES.PENDING
         }
     });
 

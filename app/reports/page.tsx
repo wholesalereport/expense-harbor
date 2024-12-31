@@ -104,10 +104,6 @@ export default function Page() {
         open: 'text-yellow-800 bg-yellow-50 ring-yellow-600/20',
     }
 
-
-
-
-
     return (
         <>
             <main>

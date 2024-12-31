@@ -15,4 +15,5 @@ export type TPaymentIntent = {
     createdAt: Date; // Creation timestamp
     updatedAt: Date; // Last update timestamp,
     paymentMethodId?:string  | null;
+    client_secret?:string
 };
