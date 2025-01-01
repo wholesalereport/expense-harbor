@@ -30,6 +30,7 @@
     "@vercel/kv": "^3.0.0",
     "chart.js": "^4.4.7",
     "compromise": "^14.14.3",
+    "currency-symbol-map": "^5.1.0",
     "framer-motion": "^11.11.17",
     "iron-session": "^8.0.4",
     "jsonwebtoken": "^9.0.2",

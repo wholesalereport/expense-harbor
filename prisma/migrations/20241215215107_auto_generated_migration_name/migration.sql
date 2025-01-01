@@ -35,7 +35,7 @@ CREATE TABLE "Report" (
 -- CreateTable
 CREATE TABLE "PaymentIntent" (
     "id" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
+    "paymentAmount" INTEGER NOT NULL,
     "currency" TEXT NOT NULL,
     "paymentMethod" TEXT,
     "status" "PaymentIntentStatus" NOT NULL DEFAULT 'requires_payment_method',

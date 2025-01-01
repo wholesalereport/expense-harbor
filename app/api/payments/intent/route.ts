@@ -1,7 +1,7 @@
 import {createLogMessage} from "@/lib/logger";
 import {withErrorHandling} from "@/lib/request/withErrorHandling";
 import {STP_SECRET_KEY} from "@/constants/stripe";
-import {get, isNull, size} from 'lodash';
+import _, {get, isNull, size} from 'lodash';
 import {createReport} from "@/lib/db";
 import {TReport} from "@/lib/types/TReport";
 import {extractError} from "@/lib/request/helpers";
@@ -39,6 +39,11 @@ const handler = async (request: Request) => {
     const tierId = get(tier,"id");
     const selectedTier: TTier | undefined = payment_tears_settings.find(({id}) => tier.id === id);
     const totalLines = size(get(body, "file.data"))
+    const totalAmountSpent = _.reduce(body?.file?.data,(acc,line) => {
+        const amount = _.get(line,body.columnsMapping.totalPayed,"");
+        return amount ?  acc + _.toNumber(amount) : acc;
+    },0)
+
 
     let report: Report;
     let paymentIntent: PaymentIntent & Pick<TPaymentIntent,"client_secret">;
@@ -54,7 +59,8 @@ const handler = async (request: Request) => {
         ...omit(body,["file","acceptedFiles","columnsMapping","tier"]) as Report,
         userId,
         totalLines,
-        tierId
+        tierId,
+        totalAmountSpent
     });
 
     const reportId = get(report,"id");
@@ -113,4 +119,4 @@ const handler = async (request: Request) => {
     })
 }
 
-export const POST = withErrorHandling(handler);
+export const POST = handler; //withErrorHandling(handler);

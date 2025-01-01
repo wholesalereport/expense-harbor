@@ -4,6 +4,7 @@ import {REPORT_STATUSES} from "@/constants";
 import {Report} from "@prisma/client";
 import {getTitle} from "@/src/components/reports/helpers";
 import {startCase} from 'lodash';
+import {getCurrency} from "@/src/utils";
 
 const classNameForReportByStatus = (status: string): string => {
     switch (status) {
@@ -61,7 +62,7 @@ export const ReportsComponent = ({reports, selectedReport, setSelectedReport}) =
                                 >
                                     <div className="flex  w-full">
                                         <p className="text-sm font-semibold text-gray-900 break-words flex-grow">
-                                            {report.name || 'Untitled Report'}
+                                            {getTitle(report)}
                                         </p>
                                     </div>
                                     <div
@@ -76,7 +77,8 @@ export const ReportsComponent = ({reports, selectedReport, setSelectedReport}) =
                                               })}
                                             </time>
                                         </span>
-                                        <span>Lines: {report.totalLines}</span>
+                                        <span><b>Lines</b>:&nbsp; {report.totalLines}</span>
+                                        <span><b>Total</b>:&nbsp; {getCurrency("USD")}{report.totalAmountSpent}</span>
                                         <span className="flex items-end">
                                             <span
                                                 className={`inline-flex items-start rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getStatusStyles(report.status)}`}>

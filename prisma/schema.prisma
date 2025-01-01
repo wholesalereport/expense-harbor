@@ -20,17 +20,18 @@ model User {
 }
 
 model Report {
-  id         String          @id @default(uuid()) // UUID as primary key
-  userId     String // Foreign key referencing User
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tierId     String // Tier ID attribute for the report
-  totalLines Int // Total lines attribute
-  status     ReportStatus    @default(pending) // Status of the report
-  payments   PaymentIntent[] // One-to-many relationship with payment intents
-  createdAt  DateTime        @default(now()) // Automatically set when created
-  updatedAt  DateTime        @updatedAt // Automatically updated when modified
-  deletedAt  DateTime? // Soft delete field
-  name       String?
+  id               String          @id @default(uuid()) // UUID as primary key
+  userId           String // Foreign key referencing User
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tierId           String // Tier ID attribute for the report
+  totalLines       Int // Total lines attribute
+  status           ReportStatus    @default(pending) // Status of the report
+  payments         PaymentIntent[] // One-to-many relationship with payment intents
+  createdAt        DateTime        @default(now()) // Automatically set when created
+  updatedAt        DateTime        @updatedAt // Automatically updated when modified
+  deletedAt        DateTime? // Soft delete field
+  name             String?
+  totalAmountSpent Int?            @default(0)
 
   @@unique([id, userId])
 }

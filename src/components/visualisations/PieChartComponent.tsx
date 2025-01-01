@@ -10,7 +10,7 @@ const PieChartComponent = ({data}) => {
     if(!data || isNull(data)){
         return null;
     }
-    const labels = Object.keys(data).map((key) => `${key} (${data[key].toFixed(2)})`);
+    const labels = Object.keys(data).map((key) => `${key} ($${data[key].toFixed(2)})`);
     const values = Object.values(data);
 
     const chartData = {
@@ -31,6 +31,15 @@ const PieChartComponent = ({data}) => {
         plugins: {
             legend: {
                 position: 'right',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        const value = tooltipItem.raw; // Get the raw value from the tooltip item
+                        const label = chartData.labels[tooltipItem.dataIndex]; // Get the corresponding label
+                        return `${label}: $${value.toFixed(2)}`; // Format as "Label: $Value"
+                    },
+                },
             },
         },
         maintainAspectRatio: false,
