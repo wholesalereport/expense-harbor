@@ -3,8 +3,10 @@ import React from "react";
 import {REPORT_STATUSES} from "@/constants";
 import {Report} from "@prisma/client";
 import {getTitle} from "@/src/components/reports/helpers";
-const classNameForReportByStatus = (status: string):string => {
-    switch (status){
+import {startCase} from 'lodash';
+
+const classNameForReportByStatus = (status: string): string => {
+    switch (status) {
         case REPORT_STATUSES.OPEN:
             return "bg-gray-500";
         case REPORT_STATUSES.IN_PROGRESS:
@@ -15,7 +17,19 @@ const classNameForReportByStatus = (status: string):string => {
             return "bg-gray-500"
     }
 }
-export const ReportsComponent = ({reports,selectedReport,setSelectedReport}) => {
+
+function getStatusStyles(status: string) {
+    switch (status) {
+        case 'complete':
+            return 'bg-green-50 text-green-700 ring-green-600/20';
+        case 'in_progress':
+            return 'bg-yellow-50 text-yellow-700 ring-yellow-600/20';
+        default:
+            return 'bg-gray-50 text-gray-700 ring-gray-600/20';
+    }
+}
+
+export const ReportsComponent = ({reports, selectedReport, setSelectedReport}) => {
 
     const handleOnSelectReport = (report: Report) => setSelectedReport(report);
 
@@ -36,7 +50,59 @@ export const ReportsComponent = ({reports,selectedReport,setSelectedReport}) => 
                             className="divide-y divide-gray-100 overflow-hidden bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl mt-2"
                         >
                             {reports.map((report) => (
-                                <li key={report.id}
+                                <li
+                                    key={report.id}
+                                    className={`relative flex flex-col px-2 py-4  ${
+                                        selectedReport?.id === report.id
+                                            ? "bg-indigo-100 ring-2 ring-indigo-500"
+                                            : "hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => setSelectedReport(report)}
+                                >
+                                    <div className="flex  w-full">
+                                        <p className="text-sm font-semibold text-gray-900 break-words flex-grow">
+                                            {report.name || 'Untitled Report'}
+                                        </p>
+                                    </div>
+                                    <div
+                                        className="mt-2 flex justify-between items-center text-xs text-gray-500 w-full">
+                                        <span>
+                                            <time className="text-sm">
+                                              {new Date(report.createdAt).toLocaleDateString('en-US', {
+                                                  weekday: 'short',
+                                                  year: 'numeric',
+                                                  month: 'short',
+                                                  day: 'numeric'
+                                              })}
+                                            </time>
+                                        </span>
+                                        <span>Lines: {report.totalLines}</span>
+                                        <span className="flex items-end">
+                                            <span
+                                                className={`inline-flex items-start rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getStatusStyles(report.status)}`}>
+                                                    {startCase(report.status)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                </div>
+
+                <div className="mt-6 border-t border-gray-900/5 px-6 py-6">
+                    <a href="/reports/new" className="text-sm/6 font-semibold text-gray-900">
+                        Create Report <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    )
+}
+
+/*
+<li key={report.id}
                                     className={`relative flex justify-between gap-x-6 px-1 py-1 sm:px-6 ${
                                         selectedReport?.id === report.id
                                             ? "bg-indigo-100 ring-2 ring-indigo-500"
@@ -71,18 +137,4 @@ export const ReportsComponent = ({reports,selectedReport,setSelectedReport}) => 
                                         </div>
                                     </div>
                                 </li>
-                            ))}
-                        </ul>
-                    </nav>
-                </div>
-
-                <div className="mt-6 border-t border-gray-900/5 px-6 py-6">
-                    <a href="/reports/new" className="text-sm/6 font-semibold text-gray-900">
-                        Create Report <span aria-hidden="true">&rarr;</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    )
-}
+ */

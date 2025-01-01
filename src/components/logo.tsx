@@ -7,10 +7,19 @@ import Link from "next/link";
 
 export function Logo() {
     return (
-        <Link href="/" title="Home" className={"flex gap-2"}>
-            <Mark className="h-9 fill-black"/>
-            <span className={"mt-1 font-semibold mr-4"}>Expense Harbor</span>
-        </Link>
+        <div className="flex lg:flex-1">
+            <Link href="/" className="-m-1.5 p-1.5">
+                <span className="sr-only">Expense Harbor</span>
+                <svg className="h-8 w-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                          strokeLinejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                          strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                          strokeLinejoin="round"/>
+                </svg>
+            </Link>
+        </div>
     )
 }
 
