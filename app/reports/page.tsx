@@ -1,6 +1,5 @@
 'use client'
 import React, {useEffect, useMemo, useState} from 'react';
-import {FaFileCsv, FaFileExcel} from 'react-icons/fa'; // Install react-icons if not already installed
 
 import _, {isEmpty, isNull} from "lodash";
 import {NoReportsComponent} from "@/src/components/reports/NoReportsComponent";
@@ -52,19 +51,23 @@ export default function Page() {
     return (
         <>
             <main>
-                <HeaderComponent />
-                <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div
-                        className="mx-auto grid max-w-2xl grid-cols-1 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-                        {/* List of reports */}
-                        <ReportsComponent reports={reports} selectedReport={selectedReport} setSelectedReport={setSelectedReport}  />
-                        {/* Report */}
-                        {isReportPending && <ReportPendingComponent />}
-                        {!isReportPending && <ReportComponent selectedReport={selectedReport} />}
+                <div className="relative isolate px-6 pt-14 lg:px-8">
 
+                    <HeaderComponent/>
+                    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                        <div
+                            className="mx-auto grid max-w-2xl grid-cols-1 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                            {/* List of reports */}
+                            <ReportsComponent reports={reports} selectedReport={selectedReport}
+                                              setSelectedReport={setSelectedReport}/>
+                            {/* Report */}
+                            {isReportPending && <ReportPendingComponent/>}
+                            {!isReportPending && <ReportComponent selectedReport={selectedReport}/>}
+
+                        </div>
                     </div>
                 </div>
             </main>
         </>
-    )
+)
 }

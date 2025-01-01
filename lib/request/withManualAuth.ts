@@ -27,7 +27,7 @@ export  function withManualAuth(
     handler: (req: Request, params?: { [key: string]: any } | undefined) => Promise<Response>
 ) {
     return async (req: Request, params?: { [key: string]: any }) => {
-        const {id} = await validateUserId(req);
-        return await handler(req, { ...params, userId: id });
+        const {userId} = await validateUserId(req);
+        return await handler(req, { ...params, userId });
     }
 }

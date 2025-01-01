@@ -1,5 +1,5 @@
 import {PropsWithChildren} from "react";
-import {MainMenu} from "@/src/components/navbar";
+import {MainMenu} from "@/src/components/navbarv2";
 import {BentoBox} from "@/src/components/bento-box";
 import {ReportsLayoutProvider} from "@/src/contexts/reports-context";
 
@@ -8,7 +8,7 @@ export default function RootLayout({children}: PropsWithChildren) {
         <ReportsLayoutProvider>
             <div className={""}>
                 <MainMenu/>
-                <div>
+                <div className={"mt-10"}>
                     {children}
                 </div>
             </div>

@@ -4,6 +4,7 @@ import {
     ClerkProvider,
 } from '@clerk/nextjs'
 import React, {Suspense, ReactNode} from "react";
+import {MainMenu} from "@/src/components/navbarv2";
 
 
 export const metadata: Metadata = {
@@ -13,10 +14,7 @@ export const metadata: Metadata = {
     },
 }
 
-export default function RootLayout({ children }: Readonly<{
-    children: ReactNode;
-}>) {
-
+export default function RootLayout({children}: { children: React.ReactNode }) {
     return (
         <ClerkProvider>
             <html lang="en">
@@ -27,9 +25,8 @@ export default function RootLayout({ children }: Readonly<{
                 />
             </head>
             <body className="text-gray-950 antialiased">
-            <Suspense fallback={<p>Loading user details...</p>}>
-                {children}
-            </Suspense>
+            <MainMenu/>
+            {children}
             </body>
             </html>
         </ClerkProvider>

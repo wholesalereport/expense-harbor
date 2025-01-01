@@ -1,7 +1,18 @@
 import React from 'react';
 import {IconComponent} from "@/src/components/reports/IconComponent";
 
-export const HeaderComponent = () =>{
+const PAGE_NAME = 'Reports'
+const PAGE_DESCRIPTION = 'Each report includes a breakdown of totals and related transactions by category.\n'
+import { PlusIcon } from '@heroicons/react/24/solid'
+import {useRouter} from "next/navigation";
+
+export const HeaderComponent = ({
+                                    showCreateReport = true,
+                                    pageName=PAGE_NAME,
+                                    pageDescription=PAGE_DESCRIPTION
+                                }) =>{
+    const router = useRouter();
+
     return (
         <header className="relative isolate pt-1">
             <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
@@ -22,22 +33,25 @@ export const HeaderComponent = () =>{
                 <div
                     className="mx-auto flex max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
                     <div className="flex items-center gap-x-6">
-                        <IconComponent />
+                        {/*<IconComponent />*/}
                         <h1>
                             <div className="text-sm/6 text-gray-500">
-                                Each report includes a breakdown of totals and related transactions by category.
+                                {pageDescription}
                             </div>
-                            <div className="mt-1 text-base font-semibold text-gray-900">Reports</div>
+                            <div className="mt-1 text-base font-semibold text-gray-900">{pageName}</div>
                         </h1>
                     </div>
                     <div className="flex items-center gap-x-4 sm:gap-x-6">
 
-                        <a
-                            href="/reports/new"
-                            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        {showCreateReport && <button
+                            role={"link"}
+                            onClick={() => router.push("/reports/new") }
+                            type="button"
+                            className="inline-flex items-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
-                            Create Report
-                        </a>
+                            <PlusIcon aria-hidden="true" className="-ml-0.5 size-5 font-bold"/>
+                             Create Report
+                        </button>}
 
                     </div>
                 </div>
